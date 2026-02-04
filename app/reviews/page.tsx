@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Plus, MessageCircle } from 'lucide-react';
@@ -23,7 +23,7 @@ interface ReviewWithDetails {
   } | null;
 }
 
-export default function ReviewsPage() {
+function ReviewsContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [reviews, setReviews] = useState<ReviewWithDetails[]>([]);
@@ -156,5 +156,19 @@ export default function ReviewsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ReviewsPage() {
+  return (
+    <Suspense
+      fallback={(
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        </div>
+      )}
+    >
+      <ReviewsContent />
+    </Suspense>
   );
 }
