@@ -57,7 +57,12 @@ export default function ReviewsPage() {
       const { data, error } = await query.limit(20);
 
       if (error) throw error;
-      setReviews(data || []);
+      const normalized = (data || []).map((review) => {
+        const userValue = Array.isArray(review.users) ? review.users[0] ?? null : review.users ?? null;
+        const animeValue = Array.isArray(review.animes) ? review.animes[0] ?? null : review.animes ?? null;
+        return { ...review, users: userValue, animes: animeValue };
+      });
+      setReviews(normalized);
     } catch (error) {
       console.error('感想取得エラー:', error);
     } finally {

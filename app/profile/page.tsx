@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Settings, MessageCircle, Heart, Save, UploadCloud } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
-import type { Anime, User } from '@/types/database';
+import type { User } from '@/types/database';
 
 interface UserStats {
   reviews_count: number;
@@ -23,6 +23,13 @@ interface FavoriteAnime {
   } | null;
 }
 
+interface AnimeOption {
+  id: number;
+  title: string;
+  title_en?: string;
+  image_url?: string | null;
+}
+
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -31,7 +38,7 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<FavoriteAnime[]>([]);
-  const [animes, setAnimes] = useState<Anime[]>([]);
+  const [animes, setAnimes] = useState<AnimeOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [formState, setFormState] = useState({
@@ -153,7 +160,11 @@ export default function ProfilePage() {
         .limit(6);
 
       if (error) throw error;
-      setReviews(data || []);
+      const normalized = (data || []).map((review) => {
+        const animeValue = Array.isArray(review.animes) ? review.animes[0] ?? null : review.animes ?? null;
+        return { ...review, animes: animeValue };
+      });
+      setReviews(normalized);
     } catch (error) {
       console.error('感想取得エラー:', error);
     }

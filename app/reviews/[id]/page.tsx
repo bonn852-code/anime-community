@@ -83,7 +83,12 @@ export default function ReviewDetailPage() {
         .single();
 
       if (reviewError) throw reviewError;
-      setReview(reviewData);
+      const normalizedReview = {
+        ...reviewData,
+        users: Array.isArray(reviewData.users) ? reviewData.users[0] ?? null : reviewData.users ?? null,
+        animes: Array.isArray(reviewData.animes) ? reviewData.animes[0] ?? null : reviewData.animes ?? null,
+      };
+      setReview(normalizedReview);
 
       await Promise.all([fetchComments(), fetchLikeCount()]);
     } catch (error) {
@@ -106,7 +111,11 @@ export default function ReviewDetailPage() {
       .eq('review_id', reviewId)
       .order('created_at', { ascending: true });
 
-    setComments(data || []);
+    const normalized = (data || []).map((comment) => {
+      const userValue = Array.isArray(comment.users) ? comment.users[0] ?? null : comment.users ?? null;
+      return { ...comment, users: userValue };
+    });
+    setComments(normalized);
   };
 
   const fetchLikeCount = async () => {
