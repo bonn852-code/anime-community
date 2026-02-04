@@ -6,14 +6,17 @@ import Link from 'next/link';
 import { Star, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
-import type { Anime } from '@/types/database';
+interface AnimeOption {
+  id: number;
+  title: string;
+}
 
 export default function ReviewNewPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [animes, setAnimes] = useState<Anime[]>([]);
+  const [animes, setAnimes] = useState<AnimeOption[]>([]);
   const [animeId, setAnimeId] = useState<number | ''>('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
