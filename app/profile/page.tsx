@@ -168,10 +168,14 @@ export default function ProfilePage() {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      setFavorites(data || []);
+      const normalized = (data || []).map((item) => {
+        const animeValue = Array.isArray(item.animes) ? item.animes[0] ?? null : item.animes ?? null;
+        return { ...item, animes: animeValue };
+      });
+      setFavorites(normalized);
 
       const selections: (number | '')[] = ['', '', ''];
-      (data || []).forEach((item) => {
+      normalized.forEach((item) => {
         if (item.display_order && item.display_order >= 1 && item.display_order <= 3) {
           selections[item.display_order - 1] = item.anime_id;
         }
