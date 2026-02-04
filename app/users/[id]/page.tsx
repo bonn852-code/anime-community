@@ -56,8 +56,12 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
 
   const handle = useMemo(() => {
-    if (!profile?.username) return '';
-    return profile.username.includes('@') ? profile.username.split('@')[0] : profile.username;
+    if (!profile) return '';
+    if (profile.display_name) return profile.display_name;
+    if (profile.username.includes('@')) {
+      return `user-${profile.id.slice(0, 6)}`;
+    }
+    return profile.username;
   }, [profile]);
 
   useEffect(() => {

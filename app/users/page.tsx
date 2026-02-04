@@ -26,9 +26,13 @@ export default function UsersPage() {
 
   const filteredUsers = useMemo(() => users.filter((u) => u.id !== user?.id), [users, user]);
 
-  const formatHandle = (username: string) => {
-    if (!username) return '';
-    return username.includes('@') ? username.split('@')[0] : username;
+  const formatHandle = (profile: UserRow) => {
+    if (profile.display_name) return profile.display_name;
+    if (!profile.username) return '';
+    if (profile.username.includes('@')) {
+      return `user-${profile.id.slice(0, 6)}`;
+    }
+    return profile.username;
   };
 
   useEffect(() => {
@@ -158,7 +162,7 @@ export default function UsersPage() {
         <div className="grid md:grid-cols-2 gap-6">
           {filteredUsers.map((profile) => {
             const isFollowing = followingIds.has(profile.id);
-            const handle = formatHandle(profile.username);
+            const handle = formatHandle(profile);
             return (
               <div key={profile.id} className="card p-6 flex items-center justify-between gap-4">
                 <Link href={`/users/${profile.id}`} className="flex items-center gap-4 min-w-0">
