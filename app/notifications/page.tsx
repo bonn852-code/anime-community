@@ -12,14 +12,26 @@ interface NotificationWithDetails {
   type: string;
   is_read: boolean;
   created_at: string;
-  actor: {
-    username: string;
-    display_name: string | null;
-  } | null;
-  reviews: {
-    id: number;
-    title: string;
-  } | null;
+  actor:
+    | {
+        username: string;
+        display_name: string | null;
+      }
+    | {
+        username: string;
+        display_name: string | null;
+      }[]
+    | null;
+  reviews:
+    | {
+        id: number;
+        title: string;
+      }
+    | {
+        id: number;
+        title: string;
+      }[]
+    | null;
 }
 
 export default function NotificationsPage() {
@@ -53,10 +65,15 @@ export default function NotificationsPage() {
         .limit(50);
 
       if (error) throw error;
-      setNotifications(data || []);
+      const normalized = (data || []).map((item) => {
+        const actorValue = Array.isArray(item.actor) ? item.actor[0] ?? null : item.actor ?? null;
+        const reviewValue = Array.isArray(item.reviews) ? item.reviews[0] ?? null : item.reviews ?? null;
+        return { ...item, actor: actorValue, reviews: reviewValue };
+      });
+      setNotifications(normalized);
 
       // 未読を既読に
-      const unreadIds = data?.filter(n => !n.is_read).map(n => n.id) || [];
+      const unreadIds = (data || []).filter((n) => !n.is_read).map((n) => n.id);
       if (unreadIds.length > 0) {
         await supabase
           .from('notifications')
