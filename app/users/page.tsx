@@ -26,6 +26,11 @@ export default function UsersPage() {
 
   const filteredUsers = useMemo(() => users.filter((u) => u.id !== user?.id), [users, user]);
 
+  const formatHandle = (username: string) => {
+    if (!username) return '';
+    return username.includes('@') ? username.split('@')[0] : username;
+  };
+
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/auth/login');
@@ -153,9 +158,10 @@ export default function UsersPage() {
         <div className="grid md:grid-cols-2 gap-6">
           {filteredUsers.map((profile) => {
             const isFollowing = followingIds.has(profile.id);
+            const handle = formatHandle(profile.username);
             return (
               <div key={profile.id} className="card p-6 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
+                <Link href={`/users/${profile.id}`} className="flex items-center gap-4 min-w-0">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
                     {profile.avatar_url ? (
                       <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
@@ -163,13 +169,13 @@ export default function UsersPage() {
                       profile.display_name?.charAt(0) || profile.username.charAt(0).toUpperCase()
                     )}
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">
                       {profile.display_name || profile.username}
                     </p>
-                    <p className="text-sm text-gray-500">@{profile.username}</p>
+                    <p className="text-sm text-gray-500 truncate">@{handle}</p>
                   </div>
-                </div>
+                </Link>
 
                 <button
                   type="button"
