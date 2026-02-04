@@ -164,6 +164,15 @@ export default function ReviewDetailPage() {
         if (error) throw error;
         setLiked(true);
         setLikeCount((prev) => prev + 1);
+
+        if (review && review.user_id !== user.id) {
+          await supabase.from('notifications').insert({
+            user_id: review.user_id,
+            actor_id: user.id,
+            type: 'like',
+            review_id: review.id,
+          });
+        }
       }
     } catch (error) {
       console.error('いいね更新エラー:', error);
@@ -190,6 +199,15 @@ export default function ReviewDetailPage() {
       setCommentContent('');
       setReplyTo(null);
       await fetchComments();
+
+      if (review && review.user_id !== user.id) {
+        await supabase.from('notifications').insert({
+          user_id: review.user_id,
+          actor_id: user.id,
+          type: 'comment',
+          review_id: review.id,
+        });
+      }
     } catch (error) {
       console.error('コメント投稿エラー:', error);
     } finally {

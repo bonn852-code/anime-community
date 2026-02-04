@@ -107,6 +107,13 @@ export default function UsersPage() {
 
         if (error) throw error;
         setFollowingIds((prev) => new Set(prev).add(targetId));
+
+        await supabase.from('notifications').insert({
+          user_id: targetId,
+          actor_id: user.id,
+          type: 'follow',
+          review_id: null,
+        });
       }
     } catch (error) {
       console.error('フォロー更新エラー:', error);
