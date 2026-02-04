@@ -37,12 +37,17 @@ export async function signUp(email: string, password: string, username: string) 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: {
+        username,
+      },
+    },
   });
   
   if (authError) throw authError;
   
   // 2. プロフィール作成
-  if (authData.user) {
+  if (authData.user && authData.session) {
     const { error: profileError } = await supabase
       .from('users')
       .insert({
