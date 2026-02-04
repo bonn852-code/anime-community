@@ -14,10 +14,16 @@ interface ReviewWithUser {
   content: string;
   has_spoiler: boolean;
   created_at: string;
-  users: {
-    username: string;
-    display_name: string | null;
-  } | null;
+  users:
+    | {
+        username: string;
+        display_name: string | null;
+      }
+    | {
+        username: string;
+        display_name: string | null;
+      }[]
+    | null;
 }
 
 interface AnimeStats {
@@ -85,7 +91,11 @@ export default function AnimeDetailPage() {
         .order('created_at', { ascending: false })
         .limit(12);
 
-      setReviews(reviewsData || []);
+      const normalized = (reviewsData || []).map((review) => {
+        const userValue = Array.isArray(review.users) ? review.users[0] ?? null : review.users ?? null;
+        return { ...review, users: userValue };
+      });
+      setReviews(normalized);
     } catch (error) {
       console.error('アニメ詳細取得エラー:', error);
     } finally {
