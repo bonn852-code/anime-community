@@ -14,16 +14,10 @@ interface ReviewWithUser {
   content: string;
   has_spoiler: boolean;
   created_at: string;
-  users:
-    | {
-        username: string;
-        display_name: string | null;
-      }
-    | {
-        username: string;
-        display_name: string | null;
-      }[]
-    | null;
+  users: {
+    username: string;
+    display_name: string | null;
+  } | null;
 }
 
 interface AnimeStats {
