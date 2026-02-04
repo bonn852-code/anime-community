@@ -12,26 +12,14 @@ interface NotificationWithDetails {
   type: string;
   is_read: boolean;
   created_at: string;
-  actor:
-    | {
-        username: string;
-        display_name: string | null;
-      }
-    | {
-        username: string;
-        display_name: string | null;
-      }[]
-    | null;
-  reviews:
-    | {
-        id: number;
-        title: string;
-      }
-    | {
-        id: number;
-        title: string;
-      }[]
-    | null;
+  actor: {
+    username: string;
+    display_name: string | null;
+  } | null;
+  reviews: {
+    id: number;
+    title: string;
+  } | null;
 }
 
 export default function NotificationsPage() {
