@@ -43,6 +43,7 @@ export default function Header() {
     };
 
     fetchUnread();
+    const interval = setInterval(fetchUnread, 8000);
 
     const channel = supabase
       .channel(`notifications-${user.id}`)
@@ -57,6 +58,7 @@ export default function Header() {
 
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, [user]);
 

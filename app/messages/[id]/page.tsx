@@ -48,6 +48,11 @@ export default function MessageThreadPage() {
     }
   }, [user, authLoading, otherId]);
 
+  const scrollToBottom = () => {
+    if (!listRef.current) return;
+    listRef.current.scrollTop = listRef.current.scrollHeight;
+  };
+
   useEffect(() => {
     if (!user || !otherId) return;
     const channel = supabase
@@ -65,6 +70,7 @@ export default function MessageThreadPage() {
             if (prev.some((m) => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
+          requestAnimationFrame(scrollToBottom);
         }
       )
       .subscribe();
@@ -75,11 +81,7 @@ export default function MessageThreadPage() {
   }, [user, otherId]);
 
   useEffect(() => {
-    if (!listRef.current) return;
-    requestAnimationFrame(() => {
-      if (!listRef.current) return;
-      listRef.current.scrollTop = listRef.current.scrollHeight;
-    });
+    requestAnimationFrame(scrollToBottom);
   }, [messages]);
 
   useEffect(() => {
@@ -124,6 +126,7 @@ export default function MessageThreadPage() {
         setLoading(false);
       }
       setInitialLoading(false);
+      requestAnimationFrame(scrollToBottom);
     }
   };
 
