@@ -46,6 +46,7 @@ export default function MessageThreadPage() {
   const isAtBottomRef = useRef(true);
   const readingLockRef = useRef(false);
   const readingTimerRef = useRef<number | null>(null);
+  const lastScrollTopRef = useRef(0);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -260,11 +261,18 @@ export default function MessageThreadPage() {
 
   const handleScroll = () => {
     if (!listRef.current) return;
-    const threshold = 80;
+    const threshold = 20;
     const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+    const scrolledUp = scrollTop < lastScrollTopRef.current - 2;
+    lastScrollTopRef.current = scrollTop;
     const atBottom = scrollHeight - (scrollTop + clientHeight) < threshold;
-    setIsAtBottom(atBottom);
-    isAtBottomRef.current = atBottom;
+    if (scrolledUp) {
+      setIsAtBottom(false);
+      isAtBottomRef.current = false;
+    } else {
+      setIsAtBottom(atBottom);
+      isAtBottomRef.current = atBottom;
+    }
     if (!atBottom) {
       readingLockRef.current = true;
       if (readingTimerRef.current) {
