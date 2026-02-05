@@ -18,6 +18,7 @@ function ReviewNewContent() {
 
   const [animes, setAnimes] = useState<AnimeOption[]>([]);
   const [animeId, setAnimeId] = useState<number | ''>('');
+  const [animeSearch, setAnimeSearch] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [hasSpoiler, setHasSpoiler] = useState(false);
@@ -28,6 +29,12 @@ function ReviewNewContent() {
   const canSubmit = useMemo(() => {
     return Boolean(animeId) && title.trim().length > 0 && content.trim().length > 0;
   }, [animeId, title, content]);
+
+  const filteredAnimes = useMemo(() => {
+    if (!animeSearch.trim()) return animes;
+    const query = animeSearch.trim().toLowerCase();
+    return animes.filter((anime) => anime.title.toLowerCase().includes(query));
+  }, [animes, animeSearch]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -89,11 +96,14 @@ function ReviewNewContent() {
       if (rating) {
         const { error: ratingError } = await supabase
           .from('anime_ratings')
-          .upsert({
-            user_id: user.id,
-            anime_id: animeId,
-            rating,
-          });
+          .upsert(
+            {
+              user_id: user.id,
+              anime_id: animeId,
+              rating,
+            },
+            { onConflict: 'user_id,anime_id' }
+          );
 
         if (ratingError) throw ratingError;
       }
@@ -130,13 +140,21 @@ function ReviewNewContent() {
       <form onSubmit={handleSubmit} className="card p-6 md:p-8 space-y-6">
         <div>
           <label className="text-sm font-semibold text-gray-900">アニメを選択</label>
+          <div className="mt-2">
+            <input
+              value={animeSearch}
+              onChange={(e) => setAnimeSearch(e.target.value)}
+              className="input-field"
+              placeholder="タイトルで検索"
+            />
+          </div>
           <select
             value={animeId}
             onChange={(e) => setAnimeId(e.target.value ? Number(e.target.value) : '')}
             className="input-field mt-2"
           >
             <option value="">作品を選択してください</option>
-            {animes.map((anime) => (
+            {filteredAnimes.map((anime) => (
               <option key={anime.id} value={anime.id}>
                 {anime.title}
               </option>

@@ -116,19 +116,23 @@ export default function AnimeDetailPage() {
     if (!user) return;
     setRatingSubmitting(true);
     try {
+      setUserRating(rating);
       const { error } = await supabase
         .from('anime_ratings')
-        .upsert({
-          user_id: user.id,
-          anime_id: animeId,
-          rating,
-        });
+        .upsert(
+          {
+            user_id: user.id,
+            anime_id: animeId,
+            rating,
+          },
+          { onConflict: 'user_id,anime_id' }
+        );
 
       if (error) throw error;
-      setUserRating(rating);
       await fetchAnimeDetail();
     } catch (error) {
       console.error('評価保存エラー:', error);
+      await fetchUserRating();
     } finally {
       setRatingSubmitting(false);
     }
