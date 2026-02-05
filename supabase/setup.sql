@@ -102,6 +102,29 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 管理者ユーザー
+CREATE TABLE IF NOT EXISTS public.admin_users (
+  user_id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- お問い合わせ
+CREATE TABLE IF NOT EXISTS public.inquiries (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  email TEXT,
+  subject VARCHAR(200) NOT NULL,
+  message TEXT NOT NULL,
+  status VARCHAR(20) DEFAULT 'open',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 管理設定
+CREATE TABLE IF NOT EXISTS public.admin_settings (
+  id INTEGER PRIMARY KEY,
+  last_sync_at TIMESTAMP WITH TIME ZONE
+);
+
 -- ============================================
 -- インデックス作成
 -- ============================================
@@ -120,6 +143,8 @@ CREATE INDEX IF NOT EXISTS idx_follows_follower ON public.follows(follower_id);
 CREATE INDEX IF NOT EXISTS idx_follows_following ON public.follows(following_id);
 CREATE INDEX IF NOT EXISTS idx_favorite_animes_user_id ON public.favorite_animes(user_id);
 CREATE INDEX IF NOT EXISTS idx_favorite_animes_display_order ON public.favorite_animes(user_id, display_order);
+CREATE INDEX IF NOT EXISTS idx_inquiries_created_at ON public.inquiries(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_users_user_id ON public.admin_users(user_id);
 
 -- ============================================
 -- Row Level Security (RLS) ポリシー
@@ -134,6 +159,9 @@ ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
 
 -- users テーブルのポリシー
 CREATE POLICY "users_select_policy" ON public.users FOR SELECT USING (true);
@@ -177,6 +205,32 @@ CREATE POLICY "follows_delete_policy" ON public.follows FOR DELETE USING (auth.u
 CREATE POLICY "notifications_select_policy" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "notifications_update_policy" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "notifications_insert_policy" ON public.notifications FOR INSERT WITH CHECK (true);
+
+-- admin_users テーブルのポリシー
+CREATE POLICY "admin_users_select_policy" ON public.admin_users FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "admin_users_insert_policy" ON public.admin_users FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "admin_users_delete_policy" ON public.admin_users FOR DELETE USING (auth.uid() = user_id);
+
+-- inquiries テーブルのポリシー
+CREATE POLICY "inquiries_select_policy" ON public.inquiries FOR SELECT USING (
+  auth.uid() = user_id
+  OR EXISTS (SELECT 1 FROM public.admin_users au WHERE au.user_id = auth.uid())
+);
+CREATE POLICY "inquiries_insert_policy" ON public.inquiries FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "inquiries_update_policy" ON public.inquiries FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM public.admin_users au WHERE au.user_id = auth.uid())
+);
+
+-- admin_settings テーブルのポリシー
+CREATE POLICY "admin_settings_select_policy" ON public.admin_settings FOR SELECT USING (
+  EXISTS (SELECT 1 FROM public.admin_users au WHERE au.user_id = auth.uid())
+);
+CREATE POLICY "admin_settings_update_policy" ON public.admin_settings FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM public.admin_users au WHERE au.user_id = auth.uid())
+);
+CREATE POLICY "admin_settings_insert_policy" ON public.admin_settings FOR INSERT WITH CHECK (
+  EXISTS (SELECT 1 FROM public.admin_users au WHERE au.user_id = auth.uid())
+);
 
 -- ============================================
 -- トリガー関数

@@ -15,10 +15,20 @@ export default function AnimesPage() {
   const [loading, setLoading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
+  const [lastSyncAt, setLastSyncAt] = useState<string | null>(null);
+
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || '';
+  const isAdmin = Boolean(user?.email && user.email.toLowerCase() === adminEmail);
 
   useEffect(() => {
     fetchAnimes();
   }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchLastSync();
+    }
+  }, [isAdmin]);
 
   useEffect(() => {
     filterAnimes();
@@ -41,8 +51,33 @@ export default function AnimesPage() {
     }
   };
 
+  const fetchLastSync = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_settings')
+        .select('last_sync_at')
+        .eq('id', 1)
+        .maybeSingle();
+      if (error) throw error;
+      setLastSyncAt(data?.last_sync_at ?? null);
+    } catch (error) {
+      console.error('同期情報取得エラー:', error);
+    }
+  };
+
+  const canSync = () => {
+    if (!lastSyncAt) return true;
+    const last = new Date(lastSyncAt).getTime();
+    const now = Date.now();
+    return now - last >= 24 * 60 * 60 * 1000;
+  };
+
   const syncFromApi = async () => {
-    if (!user) return;
+    if (!user || !isAdmin) return;
+    if (!canSync()) {
+      setSyncMessage('更新は1日1回までです。時間をおいて再度お試しください。');
+      return;
+    }
     setSyncLoading(true);
     setSyncMessage('');
     try {
@@ -84,8 +119,13 @@ export default function AnimesPage() {
       const { error: insertError } = await supabase.from('animes').insert(newItems);
       if (insertError) throw insertError;
 
+      await supabase
+        .from('admin_settings')
+        .upsert({ id: 1, last_sync_at: new Date().toISOString() });
+
       setSyncMessage(`${newItems.length}件の作品を追加しました。`);
       await fetchAnimes();
+      await fetchLastSync();
     } catch (error) {
       console.error('API同期エラー:', error);
       setSyncMessage('API同期に失敗しました。時間をおいて再度お試しください。');
@@ -140,7 +180,7 @@ export default function AnimesPage() {
             {filteredAnimes.length}作品が見つかりました
           </p>
         </div>
-        {user && (
+        {isAdmin && (
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               type="button"

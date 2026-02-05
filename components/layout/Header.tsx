@@ -79,6 +79,16 @@ export default function Header() {
             >
               ユーザー検索
             </Link>
+            <Link
+              href="/contact"
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                isActive("/contact")
+                  ? "bg-pink-100 text-pink-700"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              お問い合わせ
+            </Link>
           </nav>
 
           <div className="flex items-center space-x-2">
@@ -171,6 +181,17 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 ユーザー検索
+              </Link>
+              <Link
+                href="/contact"
+                className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                  isActive("/contact")
+                    ? "bg-pink-100 text-pink-700"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                お問い合わせ
               </Link>
               {user ? (
                 <>
