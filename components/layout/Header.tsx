@@ -16,6 +16,7 @@ export default function Header() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const isActive = (path: string) => pathname === path;
+  const showUnreadBadge = pathname !== "/notifications" && unreadCount > 0;
 
   const handleSignOut = async () => {
     try {
@@ -143,7 +144,7 @@ export default function Header() {
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative hidden sm:block"
                 >
                   <Bell className="w-5 h-5 text-gray-600" />
-                  {unreadCount > 0 && (
+                  {showUnreadBadge && (
                     <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-pink-500"></span>
                   )}
                 </Link>
@@ -258,7 +259,7 @@ export default function Header() {
                     className="px-4 py-3 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-all"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    通知{unreadCount > 0 ? ` (${unreadCount})` : ""}
+                    通知{showUnreadBadge ? ` (${unreadCount})` : ""}
                   </Link>
                   <Link
                     href="/profile"
