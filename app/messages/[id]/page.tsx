@@ -38,6 +38,9 @@ export default function MessageThreadPage() {
   const [sendError, setSendError] = useState('');
   const listRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [oldestAt, setOldestAt] = useState<string | null>(null);
+  const pageSize = 40;
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -146,9 +149,16 @@ export default function MessageThreadPage() {
         .from('direct_messages')
         .select('*')
         .or(`and(sender_id.eq.${user!.id},recipient_id.eq.${otherId}),and(sender_id.eq.${otherId},recipient_id.eq.${user!.id})`)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false })
+        .limit(pageSize);
       if (error) throw error;
-      setMessages(data || []);
+      const newestFirst = data || [];
+      const chronological = [...newestFirst].reverse();
+      setMessages(chronological);
+      if (chronological.length > 0) {
+        setOldestAt(chronological[0].created_at);
+      }
+      setHasMore(newestFirst.length === pageSize);
 
       await supabase
         .from('direct_messages')
@@ -164,6 +174,28 @@ export default function MessageThreadPage() {
       }
       setInitialLoading(false);
       requestAnimationFrame(scrollToBottom);
+    }
+  };
+
+  const loadOlder = async () => {
+    if (!oldestAt) return;
+    try {
+      const { data, error } = await supabase
+        .from('direct_messages')
+        .select('*')
+        .or(`and(sender_id.eq.${user!.id},recipient_id.eq.${otherId}),and(sender_id.eq.${otherId},recipient_id.eq.${user!.id})`)
+        .lt('created_at', oldestAt)
+        .order('created_at', { ascending: false })
+        .limit(pageSize);
+      if (error) throw error;
+      const older = (data || []).reverse();
+      if (older.length > 0) {
+        setMessages((prev) => [...older, ...prev]);
+        setOldestAt(older[0].created_at);
+      }
+      setHasMore((data || []).length === pageSize);
+    } catch (error) {
+      console.error('過去メッセージ取得エラー:', error);
     }
   };
 
@@ -250,6 +282,17 @@ export default function MessageThreadPage() {
           ref={listRef}
           className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50/60 via-white to-white px-4 py-5 space-y-4 pb-28"
         >
+          {hasMore && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={loadOlder}
+                className="text-xs text-gray-500 bg-white border border-gray-200 rounded-full px-3 py-1 hover:bg-gray-50"
+              >
+                過去のメッセージを表示
+              </button>
+            </div>
+          )}
           {messages.length > 0 ? (
             messages.map((msg) => {
               const isMine = msg.sender_id === user?.id;
