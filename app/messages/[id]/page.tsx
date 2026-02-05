@@ -37,6 +37,7 @@ export default function MessageThreadPage() {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
   const listRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -49,14 +50,25 @@ export default function MessageThreadPage() {
   }, [user, authLoading, otherId]);
 
   const scrollToBottom = () => {
-    if (!listRef.current) return;
-    const el = listRef.current;
-    el.scrollTop = el.scrollHeight;
-    // iOS/Safari sometimes needs a second tick
-    requestAnimationFrame(() => {
-      if (!listRef.current) return;
+    const target = bottomRef.current || listRef.current;
+    if (!target) return;
+    // Use scrollIntoView for mobile Safari reliability.
+    bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+    if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+    requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+      if (listRef.current) {
+        listRef.current.scrollTop = listRef.current.scrollHeight;
+      }
     });
+    setTimeout(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'auto', block: 'end' });
+      if (listRef.current) {
+        listRef.current.scrollTop = listRef.current.scrollHeight;
+      }
+    }, 50);
   };
 
   useEffect(() => {
@@ -89,6 +101,25 @@ export default function MessageThreadPage() {
   useLayoutEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [otherId]);
+
+  useEffect(() => {
+    const handleFocus = () => scrollToBottom();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        scrollToBottom();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []);
 
   useEffect(() => {
     if (!user || !otherId) return;
@@ -236,6 +267,9 @@ export default function MessageThreadPage() {
                     </div>
                     <p className={`mt-1 text-[11px] text-gray-400 ${isMine ? 'text-right' : 'text-left'}`}>
                       {new Date(msg.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                      {isMine && (
+                        <span className="ml-2">{msg.is_read ? '既読' : '送信済み'}</span>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -244,6 +278,7 @@ export default function MessageThreadPage() {
           ) : (
             <p className="text-sm text-gray-500 text-center">メッセージを送ってみましょう</p>
           )}
+          <div ref={bottomRef} />
         </div>
 
         <form onSubmit={handleSend} className="p-4 border-t border-gray-100 bg-white space-y-2 sticky bottom-0">
