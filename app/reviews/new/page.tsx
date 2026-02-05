@@ -169,7 +169,7 @@ function ReviewNewContent() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-gray-900">評価 (任意)</p>
-              <p className="text-xs text-gray-500">1〜5で評価を付けられます</p>
+              <p className="text-xs text-gray-500">1〜5で評価を付けられます（何度でも変更OK）</p>
             </div>
             <div className="flex items-center gap-2">
               {[1, 2, 3, 4, 5].map((value) => (

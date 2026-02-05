@@ -23,15 +23,38 @@ export default function HomePage() {
           感想を共有して、同じ作品を愛する仲間と出会える場所
         </p>
         
-        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
-          <Link href="/auth/signup" className="btn-primary">
-            今すぐ始める
-            <ArrowRight className="w-5 h-5 inline ml-2" />
-          </Link>
-          <Link href="/animes" className="btn-secondary">
-            アニメを探す
-          </Link>
-        </div>
+        {!user ? (
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
+            <Link href="/auth/signup" className="btn-primary">
+              今すぐ始める
+              <ArrowRight className="w-5 h-5 inline ml-2" />
+            </Link>
+            <Link href="/animes" className="btn-secondary">
+              アニメを探す
+            </Link>
+          </div>
+        ) : (
+          <div className="animate-slide-up">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 text-gray-700 text-sm font-semibold shadow-sm">
+              おかえりなさい
+              <span className="text-pink-600 font-bold">AnimeHub</span>
+            </div>
+            <div className="mt-6 grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+              <Link href="/animes" className="card p-4 text-left hover:shadow-lg transition-shadow">
+                <p className="text-sm text-gray-500 mb-1">今日の一本を探す</p>
+                <p className="text-lg font-bold text-gray-900">アニメ一覧へ</p>
+              </Link>
+              <Link href="/reviews/new" className="card p-4 text-left hover:shadow-lg transition-shadow">
+                <p className="text-sm text-gray-500 mb-1">観たらすぐ投稿</p>
+                <p className="text-lg font-bold text-gray-900">感想を書く</p>
+              </Link>
+              <Link href="/profile" className="card p-4 text-left hover:shadow-lg transition-shadow">
+                <p className="text-sm text-gray-500 mb-1">推しを見せる</p>
+                <p className="text-lg font-bold text-gray-900">プロフィール</p>
+              </Link>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="grid md:grid-cols-3 gap-6">
