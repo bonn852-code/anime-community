@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Send } from 'lucide-react';
@@ -36,6 +36,8 @@ export default function MessageThreadPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -72,6 +74,12 @@ export default function MessageThreadPage() {
       supabase.removeChannel(channel);
     };
   }, [user, otherId]);
+
+  useEffect(() => {
+    if (!listRef.current) return;
+    if (!shouldAutoScrollRef.current) return;
+    listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [messages]);
 
   useEffect(() => {
     if (!user || !otherId) return;
@@ -118,6 +126,13 @@ export default function MessageThreadPage() {
     }
   };
 
+  const handleScroll = () => {
+    if (!listRef.current) return;
+    const threshold = 80;
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+    shouldAutoScrollRef.current = scrollHeight - (scrollTop + clientHeight) < threshold;
+  };
+
   const handleSend = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!user || !content.trim()) return;
@@ -140,6 +155,7 @@ export default function MessageThreadPage() {
         type: 'dm',
         review_id: null,
       });
+      shouldAutoScrollRef.current = true;
       setContent('');
       await fetchThread({ silent: true });
     } catch (error) {
@@ -197,7 +213,11 @@ export default function MessageThreadPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50/60 via-white to-white px-4 py-5 space-y-4 pb-28">
+        <div
+          ref={listRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50/60 via-white to-white px-4 py-5 space-y-4 pb-28"
+        >
           {messages.length > 0 ? (
             messages.map((msg) => {
               const isMine = msg.sender_id === user?.id;
