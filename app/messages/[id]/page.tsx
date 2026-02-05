@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Send } from 'lucide-react';
@@ -50,7 +50,13 @@ export default function MessageThreadPage() {
 
   const scrollToBottom = () => {
     if (!listRef.current) return;
-    listRef.current.scrollTop = listRef.current.scrollHeight;
+    const el = listRef.current;
+    el.scrollTop = el.scrollHeight;
+    // iOS/Safari sometimes needs a second tick
+    requestAnimationFrame(() => {
+      if (!listRef.current) return;
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    });
   };
 
   useEffect(() => {
@@ -80,8 +86,8 @@ export default function MessageThreadPage() {
     };
   }, [user, otherId]);
 
-  useEffect(() => {
-    requestAnimationFrame(scrollToBottom);
+  useLayoutEffect(() => {
+    scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
