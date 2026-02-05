@@ -171,7 +171,7 @@ export default function MessageThreadPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-180px)] flex flex-col gap-4">
+    <div className="min-h-[calc(100vh-120px)] flex flex-col gap-4">
       <div className="flex items-center gap-3">
         <Link href="/messages" className="p-2 rounded-full bg-white shadow hover:shadow-md">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
@@ -182,7 +182,7 @@ export default function MessageThreadPage() {
         </div>
       </div>
 
-      <div className="card p-0 overflow-hidden flex-1 flex flex-col">
+      <div className="card p-0 overflow-hidden flex-1 flex flex-col min-h-0">
         <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-white">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
             {otherUser.avatar_url ? (
@@ -225,7 +225,7 @@ export default function MessageThreadPage() {
           )}
         </div>
 
-        <form onSubmit={handleSend} className="p-4 border-t border-gray-100 bg-white space-y-2">
+        <form onSubmit={handleSend} className="p-4 border-t border-gray-100 bg-white space-y-2 sticky bottom-0">
           {sendError && (
             <p className="text-xs text-red-500">{sendError}</p>
           )}
