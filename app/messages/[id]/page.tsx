@@ -248,6 +248,8 @@ export default function MessageThreadPage() {
     autoScrollRef.current = scrollHeight - (scrollTop + clientHeight) < threshold;
   };
 
+  const showJumpToLatest = !autoScrollRef.current;
+
   return (
     <div className="min-h-[100svh] flex flex-col gap-4 overflow-hidden">
       <div className="flex items-center gap-3">
@@ -321,6 +323,20 @@ export default function MessageThreadPage() {
           )}
           <div ref={bottomRef} />
         </div>
+
+        {showJumpToLatest && (
+          <button
+            type="button"
+            onClick={() => {
+              autoScrollRef.current = true;
+              scrollToBottom();
+            }}
+            className="absolute right-5 bottom-24 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-pink-600"
+            aria-label="最新へ移動"
+          >
+            ↓
+          </button>
+        )}
 
         <form onSubmit={handleSend} className="p-4 border-t border-gray-100 bg-white space-y-2 sticky bottom-0">
           {sendError && (
