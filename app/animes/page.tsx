@@ -13,6 +13,8 @@ export default function AnimesPage() {
   const [filteredAnimes, setFilteredAnimes] = useState<Anime[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
 
   useEffect(() => {
     fetchAnimes();
@@ -36,6 +38,59 @@ export default function AnimesPage() {
       console.error('アニメ取得エラー:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const syncFromApi = async () => {
+    if (!user) return;
+    setSyncLoading(true);
+    setSyncMessage('');
+    try {
+      const { data: existing, error: existingError } = await supabase
+        .from('animes')
+        .select('title');
+
+      if (existingError) throw existingError;
+      const existingTitles = new Set((existing || []).map((item) => item.title.toLowerCase()));
+
+      const response = await fetch('https://api.jikan.moe/v4/seasons/now?limit=25');
+      if (!response.ok) throw new Error('API取得に失敗しました');
+      const payload = await response.json();
+
+      const items = (payload?.data || []).map((item: any) => {
+        const title = item.title_japanese || item.title || '';
+        const titleEn = item.title_english || item.title || '';
+        const year = item.year || null;
+        const season = item.season ? `${item.year || ''}-${item.season}` : null;
+        const genres = Array.isArray(item.genres) ? item.genres.map((g: any) => g.name) : null;
+        return {
+          title,
+          title_en: titleEn || null,
+          season: season || null,
+          year,
+          genre: genres,
+          image_url: item.images?.jpg?.large_image_url || item.images?.jpg?.image_url || null,
+          description: item.synopsis || null,
+        };
+      });
+
+      const newItems = items.filter((item: any) => item.title && !existingTitles.has(item.title.toLowerCase()));
+
+      if (newItems.length === 0) {
+        setSyncMessage('追加できる新しい作品はありませんでした。');
+        return;
+      }
+
+      const { error: insertError } = await supabase.from('animes').insert(newItems);
+      if (insertError) throw insertError;
+
+      setSyncMessage(`${newItems.length}件の作品を追加しました。`);
+      await fetchAnimes();
+    } catch (error) {
+      console.error('API同期エラー:', error);
+      setSyncMessage('API同期に失敗しました。時間をおいて再度お試しください。');
+    } finally {
+      setSyncLoading(false);
     }
   };
 
@@ -86,11 +141,24 @@ export default function AnimesPage() {
           </p>
         </div>
         {user && (
-          <Link href="/animes/new" className="btn-primary inline-flex items-center justify-center">
-            アニメを追加
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={syncFromApi}
+              className="btn-secondary inline-flex items-center justify-center"
+              disabled={syncLoading}
+            >
+              {syncLoading ? 'API同期中...' : 'APIから更新'}
+            </button>
+            <Link href="/animes/new" className="btn-primary inline-flex items-center justify-center">
+              アニメを追加
+            </Link>
+          </div>
         )}
       </div>
+      {syncMessage && (
+        <div className="card p-4 text-sm text-gray-700">{syncMessage}</div>
+      )}
 
       <div className="card p-6">
         <div className="relative">
