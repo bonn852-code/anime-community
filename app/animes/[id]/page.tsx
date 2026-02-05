@@ -267,14 +267,16 @@ export default function AnimeDetailPage() {
 
       <div className="grid lg:grid-cols-[1.2fr_0.8fr] gap-6">
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <h2 className="text-2xl font-bold text-gray-900 flex items-center">
               <MessageCircle className="w-6 h-6 mr-2 text-pink-600" />
               みんなの感想
             </h2>
-            <Link href="/reviews" className="text-sm font-semibold text-pink-600 hover:text-pink-700">
-              もっと見る
-            </Link>
+            <div className="flex justify-end">
+              <Link href="/reviews" className="text-sm font-semibold text-pink-600 hover:text-pink-700">
+                もっと見る
+              </Link>
+            </div>
           </div>
 
           {reviews.length > 0 ? (

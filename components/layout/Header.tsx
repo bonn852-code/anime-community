@@ -89,6 +89,16 @@ export default function Header() {
             >
               お問い合わせ
             </Link>
+            <Link
+              href="/messages"
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                isActive("/messages")
+                  ? "bg-pink-100 text-pink-700"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              DM
+            </Link>
           </nav>
 
           <div className="flex items-center space-x-2">
@@ -192,6 +202,17 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 お問い合わせ
+              </Link>
+              <Link
+                href="/messages"
+                className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                  isActive("/messages")
+                    ? "bg-pink-100 text-pink-700"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                DM
               </Link>
               {user ? (
                 <>

@@ -33,6 +33,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const checkSuspended = async () => {
+      if (!user) return;
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('is_suspended')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (data?.is_suspended) {
+          localStorage.setItem('suspension_message', 'このアカウントは停止されています。');
+          await supabase.auth.signOut();
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('アカウント状態確認エラー:', error);
+      }
+    };
+
+    checkSuspended();
+  }, [user]);
+
   return (
     <AuthContext.Provider value={{ user, loading }}>
       {children}

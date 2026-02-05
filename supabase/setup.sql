@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   display_name VARCHAR(100),
   bio TEXT,
   avatar_url TEXT,
+  is_suspended BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -102,6 +103,16 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- ダイレクトメッセージ
+CREATE TABLE IF NOT EXISTS public.direct_messages (
+  id BIGSERIAL PRIMARY KEY,
+  sender_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  recipient_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 管理者ユーザー
 CREATE TABLE IF NOT EXISTS public.admin_users (
   user_id UUID PRIMARY KEY REFERENCES public.users(id) ON DELETE CASCADE,
@@ -139,6 +150,9 @@ CREATE INDEX IF NOT EXISTS idx_likes_review_id ON public.likes(review_id);
 CREATE INDEX IF NOT EXISTS idx_likes_user_id ON public.likes(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id_read ON public.notifications(user_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_direct_messages_sender ON public.direct_messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_direct_messages_recipient ON public.direct_messages(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_direct_messages_created_at ON public.direct_messages(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_follows_follower ON public.follows(follower_id);
 CREATE INDEX IF NOT EXISTS idx_follows_following ON public.follows(following_id);
 CREATE INDEX IF NOT EXISTS idx_favorite_animes_user_id ON public.favorite_animes(user_id);
@@ -159,6 +173,7 @@ ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.direct_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
@@ -167,6 +182,12 @@ ALTER TABLE public.admin_settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users_select_policy" ON public.users FOR SELECT USING (true);
 CREATE POLICY "users_update_policy" ON public.users FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "users_insert_policy" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "users_admin_update_policy" ON public.users FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM public.admin_users au WHERE au.user_id = auth.uid())
+);
+CREATE POLICY "users_admin_delete_policy" ON public.users FOR DELETE USING (
+  EXISTS (SELECT 1 FROM public.admin_users au WHERE au.user_id = auth.uid())
+);
 
 -- animes テーブルのポリシー
 CREATE POLICY "animes_select_policy" ON public.animes FOR SELECT USING (true);
@@ -204,7 +225,15 @@ CREATE POLICY "follows_delete_policy" ON public.follows FOR DELETE USING (auth.u
 -- notifications テーブルのポリシー
 CREATE POLICY "notifications_select_policy" ON public.notifications FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "notifications_update_policy" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "notifications_insert_policy" ON public.notifications FOR INSERT WITH CHECK (true);
+CREATE POLICY "notifications_insert_policy" ON public.notifications FOR INSERT WITH CHECK (auth.uid() = actor_id);
+
+-- direct_messages テーブルのポリシー
+CREATE POLICY "direct_messages_select_policy" ON public.direct_messages
+FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = recipient_id);
+CREATE POLICY "direct_messages_insert_policy" ON public.direct_messages
+FOR INSERT WITH CHECK (auth.uid() = sender_id);
+CREATE POLICY "direct_messages_update_policy" ON public.direct_messages
+FOR UPDATE USING (auth.uid() = recipient_id);
 
 -- admin_users テーブルのポリシー
 CREATE POLICY "admin_users_select_policy" ON public.admin_users FOR SELECT USING (auth.uid() = user_id);

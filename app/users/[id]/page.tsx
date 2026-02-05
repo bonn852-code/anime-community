@@ -208,6 +208,11 @@ export default function UserProfilePage() {
               {profile.display_name || profile.username}
             </h2>
             <p className="text-gray-600">@{handle}</p>
+            <div className="mt-3">
+              <Link href={`/messages/${profile.id}`} className="btn-primary inline-flex items-center">
+                DMを送る
+              </Link>
+            </div>
 
             <div className="flex flex-wrap gap-6 my-4">
               <div>

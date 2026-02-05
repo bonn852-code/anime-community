@@ -1,7 +1,12 @@
+ 'use client';
+
 import Link from 'next/link';
 import { ArrowRight, Sparkles, Users, MessageCircle } from 'lucide-react';
+import { useAuth } from '@/lib/AuthProvider';
 
 export default function HomePage() {
+  const { user } = useAuth();
+
   return (
     <div className="space-y-12">
       <section className="text-center py-12 px-4">
@@ -61,18 +66,20 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="card p-8 md:p-12 text-center bg-gradient-to-r from-pink-50 to-purple-50">
-        <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900">
-          今すぐ参加して、アニメの世界を広げよう
-        </h2>
-        <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-          無料でアカウント作成。好きなアニメを登録して、感想を共有しましょう。
-        </p>
-        <Link href="/auth/signup" className="btn-primary inline-flex items-center">
-          無料で始める
-          <ArrowRight className="w-5 h-5 ml-2" />
-        </Link>
-      </section>
+      {!user && (
+        <section className="card p-8 md:p-12 text-center bg-gradient-to-r from-pink-50 to-purple-50">
+          <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900">
+            今すぐ参加して、アニメの世界を広げよう
+          </h2>
+          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+            無料でアカウント作成。好きなアニメを登録して、感想を共有しましょう。
+          </p>
+          <Link href="/auth/signup" className="btn-primary inline-flex items-center">
+            無料で始める
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Link>
+        </section>
+      )}
     </div>
   );
 }
