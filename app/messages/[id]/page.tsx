@@ -34,6 +34,7 @@ export default function MessageThreadPage() {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -80,7 +81,12 @@ export default function MessageThreadPage() {
   const handleSend = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!user || !content.trim()) return;
+    if (otherId === user.id) {
+      setSendError('自分自身には送信できません');
+      return;
+    }
     setSending(true);
+    setSendError('');
     try {
       const { error } = await supabase.from('direct_messages').insert({
         sender_id: user.id,
@@ -91,6 +97,8 @@ export default function MessageThreadPage() {
       setContent('');
       await fetchThread();
     } catch (error) {
+      const message = error instanceof Error ? error.message : '送信に失敗しました';
+      setSendError(message);
       console.error('メッセージ送信エラー:', error);
     } finally {
       setSending(false);
@@ -117,7 +125,7 @@ export default function MessageThreadPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-[calc(100vh-180px)] flex flex-col gap-4">
       <div className="flex items-center gap-3">
         <Link href="/messages" className="p-2 rounded-full bg-white shadow hover:shadow-md">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
@@ -128,21 +136,40 @@ export default function MessageThreadPage() {
         </div>
       </div>
 
-      <div className="card p-6 space-y-4">
-        <div className="space-y-3 max-h-[420px] overflow-y-auto pr-2">
+      <div className="card p-0 overflow-hidden flex-1 flex flex-col">
+        <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-white">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+            {otherUser.avatar_url ? (
+              <img src={otherUser.avatar_url} alt={otherUser.username} className="w-full h-full object-cover" />
+            ) : (
+              otherUser.display_name?.charAt(0) || otherUser.username.charAt(0).toUpperCase()
+            )}
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900">{title}</p>
+            <p className="text-xs text-gray-500">@{otherUser.username}</p>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50/60 via-white to-white px-4 py-5 space-y-4">
           {messages.length > 0 ? (
             messages.map((msg) => {
               const isMine = msg.sender_id === user?.id;
               return (
                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm ${
-                      isMine
-                        ? 'bg-pink-500 text-white'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {msg.content}
+                  <div className={`max-w-[78%] md:max-w-[60%] ${isMine ? 'order-1' : 'order-2'}`}>
+                    <div
+                      className={`rounded-2xl px-4 py-2 text-sm shadow-sm ${
+                        isMine
+                          ? 'bg-pink-500 text-white rounded-br-md'
+                          : 'bg-white text-gray-800 border border-gray-100 rounded-bl-md'
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                    <p className={`mt-1 text-[11px] text-gray-400 ${isMine ? 'text-right' : 'text-left'}`}>
+                      {new Date(msg.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
                 </div>
               );
@@ -152,17 +179,22 @@ export default function MessageThreadPage() {
           )}
         </div>
 
-        <form onSubmit={handleSend} className="flex items-center gap-3">
-          <input
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            className="input-field"
-            placeholder="メッセージを入力"
-          />
-          <button type="submit" className="btn-primary inline-flex items-center" disabled={sending}>
-            <Send className="w-4 h-4 mr-1" />
-            送信
-          </button>
+        <form onSubmit={handleSend} className="p-4 border-t border-gray-100 bg-white space-y-2">
+          {sendError && (
+            <p className="text-xs text-red-500">{sendError}</p>
+          )}
+          <div className="flex items-center gap-3">
+            <input
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="input-field"
+              placeholder="メッセージを入力"
+            />
+            <button type="submit" className="btn-primary inline-flex items-center" disabled={sending}>
+              <Send className="w-4 h-4 mr-1" />
+              送信
+            </button>
+          </div>
         </form>
       </div>
     </div>

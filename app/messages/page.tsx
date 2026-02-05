@@ -35,6 +35,7 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [users, setUsers] = useState<Record<string, UserRow>>({});
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -48,6 +49,7 @@ export default function MessagesPage() {
 
   const fetchMessages = async () => {
     try {
+      setErrorMessage('');
       const { data, error } = await supabase
         .from('direct_messages')
         .select('*')
@@ -76,6 +78,8 @@ export default function MessagesPage() {
         setUsers(map);
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : '取得に失敗しました';
+      setErrorMessage(message);
       console.error('メッセージ取得エラー:', error);
     } finally {
       setLoading(false);
@@ -119,11 +123,17 @@ export default function MessagesPage() {
         <p className="text-gray-600">ユーザーとのDM履歴</p>
       </div>
 
+      {errorMessage && (
+        <div className="card p-4 text-sm text-red-600 bg-red-50 border border-red-200">
+          {errorMessage}
+        </div>
+      )}
+
       {conversations.length > 0 ? (
-        <div className="space-y-3">
+        <div className="grid sm:grid-cols-2 gap-4">
           {conversations.map((conv) => (
             <Link key={conv.user.id} href={`/messages/${conv.user.id}`}>
-              <div className="card p-5 flex items-center justify-between gap-4">
+              <div className="card p-5 flex items-center justify-between gap-4 hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
                     {conv.user.avatar_url ? (
