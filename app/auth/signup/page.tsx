@@ -2,22 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Mail, Lock, User, UserPlus } from 'lucide-react';
 import { signUp } from '@/lib/supabase';
 
 export default function SignupPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccessMessage('');
 
     if (password !== confirmPassword) {
       setError('パスワードが一致しません');
@@ -38,8 +38,13 @@ export default function SignupPage() {
 
     try {
       await signUp(email, password, username);
-      router.push('/');
-      router.refresh();
+      setSuccessMessage(
+        '確認メールを送信しました。メール内の「Confirm your mail」を押して承認してください。迷惑メールやプロモーションに入っている場合があります。'
+      );
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setUsername('');
     } catch (err: any) {
       setError(err.message || '登録に失敗しました');
     } finally {
@@ -66,6 +71,15 @@ export default function SignupPage() {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
               {error}
+            </div>
+          )}
+          {successMessage && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg mb-6 space-y-2">
+              <p className="font-semibold">登録は完了しました</p>
+              <p className="text-sm">{successMessage}</p>
+              <p className="text-xs text-emerald-600">
+                もしリンクが押せない場合は、メール本文に表示されるURLをコピーしてブラウザで開いてください。
+              </p>
             </div>
           )}
 

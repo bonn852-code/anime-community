@@ -6,6 +6,11 @@ import { useAuth } from '@/lib/AuthProvider';
 
 export default function HomePage() {
   const { user } = useAuth();
+  const displayName =
+    (user?.user_metadata?.display_name as string | undefined) ||
+    (user?.user_metadata?.username as string | undefined) ||
+    user?.email?.split('@')[0] ||
+    'ゲスト';
 
   return (
     <div className="space-y-12">
@@ -37,7 +42,7 @@ export default function HomePage() {
           <div className="animate-slide-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 text-gray-700 text-sm font-semibold shadow-sm">
               おかえりなさい
-              <span className="text-pink-600 font-bold">AnimeHub</span>
+              <span className="text-pink-600 font-bold">{displayName}</span>
             </div>
             <div className="mt-6 grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
               <Link href="/animes" className="card p-4 text-left hover:shadow-lg transition-shadow">

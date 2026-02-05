@@ -12,7 +12,7 @@ export default function Footer() {
                 <Heart className="w-5 h-5 text-white" fill="white" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
-                AnimeHub
+                AnimeCom
               </span>
             </div>
             <p className="text-gray-600 text-sm">
@@ -61,7 +61,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-200 mt-8 pt-6 text-center">
           <p className="text-sm text-gray-600">
-            © 2026 AnimeHub. All rights reserved.
+            © 2026 AnimeCom. All rights reserved.
           </p>
         </div>
       </div>

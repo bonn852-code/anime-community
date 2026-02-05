@@ -3,7 +3,7 @@ export default function AboutPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">このサイトについて</h1>
-        <p className="text-gray-600">AnimeHubはアニメの感想を共有し、交流できるコミュニティです。</p>
+        <p className="text-gray-600">AnimeComはアニメの感想を共有し、交流できるコミュニティです。</p>
       </div>
 
       <div className="card p-6 md:p-8 space-y-4">
