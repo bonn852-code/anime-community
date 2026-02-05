@@ -47,6 +47,32 @@ export default function MessageThreadPage() {
     }
   }, [user, authLoading, otherId]);
 
+  useEffect(() => {
+    if (!user || !otherId) return;
+    const channel = supabase
+      .channel(`dm-thread-${user.id}-${otherId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'direct_messages' },
+        (payload) => {
+          const msg = payload.new as MessageRow;
+          const isRelevant =
+            (msg.sender_id === user.id && msg.recipient_id === otherId) ||
+            (msg.sender_id === otherId && msg.recipient_id === user.id);
+          if (!isRelevant) return;
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, otherId]);
+
   const fetchThread = async (options?: { silent?: boolean }) => {
     if (!options?.silent) {
       setLoading(true);
