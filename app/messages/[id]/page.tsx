@@ -44,6 +44,8 @@ export default function MessageThreadPage() {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const pageSize = 40;
   const isAtBottomRef = useRef(true);
+  const readingLockRef = useRef(false);
+  const readingTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -115,6 +117,7 @@ export default function MessageThreadPage() {
   useEffect(() => {
     if (!user || !otherId) return;
     const interval = setInterval(() => {
+      if (readingLockRef.current) return;
       if (!isAtBottomRef.current) return;
       fetchThread({ silent: true });
     }, 5000);
@@ -262,9 +265,29 @@ export default function MessageThreadPage() {
     const atBottom = scrollHeight - (scrollTop + clientHeight) < threshold;
     setIsAtBottom(atBottom);
     isAtBottomRef.current = atBottom;
+    if (!atBottom) {
+      readingLockRef.current = true;
+      if (readingTimerRef.current) {
+        window.clearTimeout(readingTimerRef.current);
+      }
+      readingTimerRef.current = window.setTimeout(() => {
+        readingLockRef.current = false;
+      }, 8000);
+    }
     if (scrollTop < 40 && hasMore && !loadingOlder) {
       loadOlder();
     }
+  };
+
+  const handleWheel = () => {
+    if (isAtBottomRef.current) return;
+    readingLockRef.current = true;
+    if (readingTimerRef.current) {
+      window.clearTimeout(readingTimerRef.current);
+    }
+    readingTimerRef.current = window.setTimeout(() => {
+      readingLockRef.current = false;
+    }, 8000);
   };
 
   const showJumpToLatest = !isAtBottom;
@@ -299,6 +322,7 @@ export default function MessageThreadPage() {
         <div
           ref={listRef}
           onScroll={handleScroll}
+          onWheel={handleWheel}
           className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50/60 via-white to-white px-4 py-5 space-y-4 pb-28"
         >
           {hasMore && (
