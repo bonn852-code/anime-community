@@ -43,6 +43,7 @@ export default function MessageThreadPage() {
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const pageSize = 40;
+  const isAtBottomRef = useRef(true);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -93,7 +94,7 @@ export default function MessageThreadPage() {
             if (prev.some((m) => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
-          if (isAtBottom) {
+          if (isAtBottomRef.current) {
             requestAnimationFrame(scrollToBottom);
           }
         }
@@ -114,6 +115,7 @@ export default function MessageThreadPage() {
   useEffect(() => {
     if (!user || !otherId) return;
     const interval = setInterval(() => {
+      if (!isAtBottomRef.current) return;
       fetchThread({ silent: true });
     }, 5000);
     return () => clearInterval(interval);
@@ -162,6 +164,7 @@ export default function MessageThreadPage() {
       setInitialLoading(false);
       if (!options?.silent) {
         setIsAtBottom(true);
+        isAtBottomRef.current = true;
         requestAnimationFrame(scrollToBottom);
       }
     }
@@ -258,6 +261,7 @@ export default function MessageThreadPage() {
     const { scrollTop, scrollHeight, clientHeight } = listRef.current;
     const atBottom = scrollHeight - (scrollTop + clientHeight) < threshold;
     setIsAtBottom(atBottom);
+    isAtBottomRef.current = atBottom;
     if (scrollTop < 40 && hasMore && !loadingOlder) {
       loadOlder();
     }
