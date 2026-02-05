@@ -33,6 +33,7 @@ export default function MessageThreadPage() {
   const [otherUser, setOtherUser] = useState<UserRow | null>(null);
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
 
@@ -46,8 +47,10 @@ export default function MessageThreadPage() {
     }
   }, [user, authLoading, otherId]);
 
-  const fetchThread = async () => {
-    setLoading(true);
+  const fetchThread = async (options?: { silent?: boolean }) => {
+    if (!options?.silent) {
+      setLoading(true);
+    }
     try {
       const { data: profile, error: profileError } = await supabase
         .from('users')
@@ -74,7 +77,10 @@ export default function MessageThreadPage() {
     } catch (error) {
       console.error('メッセージ取得エラー:', error);
     } finally {
-      setLoading(false);
+      if (!options?.silent) {
+        setLoading(false);
+      }
+      setInitialLoading(false);
     }
   };
 
@@ -95,7 +101,7 @@ export default function MessageThreadPage() {
       });
       if (error) throw error;
       setContent('');
-      await fetchThread();
+      await fetchThread({ silent: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : '送信に失敗しました';
       setSendError(message);
@@ -110,7 +116,7 @@ export default function MessageThreadPage() {
     return otherUser.display_name || otherUser.username;
   }, [otherUser]);
 
-  if (authLoading || loading) {
+  if (authLoading || (loading && initialLoading)) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
