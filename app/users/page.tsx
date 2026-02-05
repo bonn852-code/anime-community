@@ -12,6 +12,7 @@ interface UserRow {
   username: string;
   display_name: string | null;
   avatar_url: string | null;
+  avatar_position: string | null;
 }
 
 export default function UsersPage() {
@@ -59,7 +60,7 @@ export default function UsersPage() {
     try {
       let query = supabase
         .from('users')
-        .select('id, username, display_name, avatar_url')
+        .select('id, username, display_name, avatar_url, avatar_position')
         .order('created_at', { ascending: false })
         .limit(30);
 
@@ -168,7 +169,12 @@ export default function UsersPage() {
                 <Link href={`/users/${profile.id}`} className="flex items-center gap-4 min-w-0">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
                     {profile.avatar_url ? (
-                      <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+                      <img
+                        src={profile.avatar_url}
+                        alt={profile.username}
+                        className="w-full h-full object-cover"
+                        style={{ objectPosition: profile.avatar_position || 'center' }}
+                      />
                     ) : (
                       profile.display_name?.charAt(0) || profile.username.charAt(0).toUpperCase()
                     )}

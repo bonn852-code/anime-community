@@ -4,6 +4,7 @@ export interface User {
   display_name?: string;
   bio?: string;
   avatar_url?: string;
+  avatar_position?: string;
   is_suspended?: boolean;
   created_at: string;
   updated_at: string;

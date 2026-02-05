@@ -45,6 +45,7 @@ export default function ProfilePage() {
     display_name: '',
     bio: '',
     avatar_url: '',
+    avatar_position: 'center',
   });
   const [favoriteSelections, setFavoriteSelections] = useState<(number | '')[]>(['', '', '']);
   const [favoriteSearch, setFavoriteSearch] = useState('');
@@ -108,6 +109,7 @@ export default function ProfilePage() {
           display_name: refreshed.display_name || '',
           bio: refreshed.bio || '',
           avatar_url: refreshed.avatar_url || '',
+          avatar_position: refreshed.avatar_position || 'center',
         });
         return;
       }
@@ -117,6 +119,7 @@ export default function ProfilePage() {
         display_name: data.display_name || '',
         bio: data.bio || '',
         avatar_url: data.avatar_url || '',
+        avatar_position: data.avatar_position || 'center',
       });
     } catch (error) {
       console.error('プロフィール取得エラー:', error);
@@ -221,6 +224,7 @@ export default function ProfilePage() {
           display_name: formState.display_name.trim(),
           bio: formState.bio.trim(),
           avatar_url: formState.avatar_url.trim(),
+          avatar_position: formState.avatar_position,
         })
         .eq('id', user.id);
 
@@ -302,7 +306,12 @@ export default function ProfilePage() {
           <div className="flex-shrink-0">
             <div className="w-32 h-32 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white text-5xl font-bold overflow-hidden">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.username}
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: profile.avatar_position || 'center' }}
+                />
               ) : (
                 profile.display_name?.charAt(0) || profile.username.charAt(0).toUpperCase()
               )}
@@ -409,6 +418,20 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-gray-900">画像の表示位置</label>
+            <select
+              value={formState.avatar_position}
+              onChange={(e) => setFormState((prev) => ({ ...prev, avatar_position: e.target.value }))}
+              className="input-field mt-2"
+            >
+              <option value="center">中央</option>
+              <option value="top">上</option>
+              <option value="bottom">下</option>
+              <option value="left">左</option>
+              <option value="right">右</option>
+            </select>
           </div>
 
           <div className="card p-5 bg-pink-50/60 space-y-4">

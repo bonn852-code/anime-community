@@ -190,9 +190,6 @@ export default function AnimesPage() {
             >
               {syncLoading ? 'API同期中...' : 'APIから更新'}
             </button>
-            <Link href="/animes/new" className="btn-primary inline-flex items-center justify-center">
-              アニメを追加
-            </Link>
           </div>
         )}
       </div>

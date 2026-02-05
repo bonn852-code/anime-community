@@ -13,6 +13,7 @@ interface UserProfile {
   display_name: string | null;
   bio: string | null;
   avatar_url: string | null;
+  avatar_position: string | null;
 }
 
 interface UserStats {
@@ -86,7 +87,7 @@ export default function UserProfilePage() {
   const fetchProfile = async () => {
     const { data, error } = await supabase
       .from('users')
-      .select('id, username, display_name, bio, avatar_url')
+      .select('id, username, display_name, bio, avatar_url, avatar_position')
       .eq('id', userId)
       .single();
 
@@ -196,7 +197,12 @@ export default function UserProfilePage() {
           <div className="flex-shrink-0">
             <div className="w-28 h-28 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.username}
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: profile.avatar_position || 'center' }}
+                />
               ) : (
                 profile.display_name?.charAt(0) || profile.username.charAt(0).toUpperCase()
               )}

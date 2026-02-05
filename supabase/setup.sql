@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   display_name VARCHAR(100),
   bio TEXT,
   avatar_url TEXT,
+  avatar_position VARCHAR(20),
   is_suspended BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
