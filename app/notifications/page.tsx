@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/AuthProvider';
 
 interface NotificationWithDetails {
   id: number;
+  actor_id: string;
   type: string;
   is_read: boolean;
   created_at: string;
@@ -42,6 +43,7 @@ export default function NotificationsPage() {
         .from('notifications')
         .select(`
           id,
+          actor_id,
           type,
           is_read,
           created_at,
@@ -83,6 +85,8 @@ export default function NotificationsPage() {
         return <MessageCircle className="w-5 h-5 text-blue-500" />;
       case 'follow':
         return <User className="w-5 h-5 text-purple-500" />;
+      case 'dm':
+        return <MessageCircle className="w-5 h-5 text-pink-500" />;
       default:
         return <Bell className="w-5 h-5 text-gray-500" />;
     }
@@ -98,6 +102,8 @@ export default function NotificationsPage() {
         return `${actorName}さんがあなたの感想にコメントしました`;
       case 'follow':
         return `${actorName}さんがあなたをフォローしました`;
+      case 'dm':
+        return `${actorName}さんからメッセージが届きました`;
       default:
         return '新しい通知があります';
     }
@@ -124,11 +130,18 @@ export default function NotificationsPage() {
 
       {notifications.length > 0 ? (
         <div className="space-y-3">
-          {notifications.map((notification) => (
-            <Link
-              key={notification.id}
-              href={notification.reviews ? `/reviews/${notification.reviews.id}` : '#'}
-            >
+          {notifications.map((notification) => {
+            const link =
+              notification.type === 'dm'
+                ? `/messages/${notification.actor_id}`
+                : notification.reviews
+                  ? `/reviews/${notification.reviews.id}`
+                  : '#';
+            return (
+              <Link
+                key={notification.id}
+                href={link}
+              >
               <div className={`card p-4 hover:shadow-lg transition-shadow ${
                 !notification.is_read ? 'bg-pink-50' : ''
               }`}>
@@ -155,7 +168,8 @@ export default function NotificationsPage() {
                 </div>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <div className="card p-12 text-center">

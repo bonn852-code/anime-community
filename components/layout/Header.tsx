@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Heart, User, Bell, Menu, X, LogOut } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthProvider";
 import { signOut } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, loading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const isActive = (path: string) => pathname === path;
 
@@ -24,6 +26,38 @@ export default function Header() {
       console.error("ログアウトエラー:", error);
     }
   };
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+    const fetchUnread = async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      setUnreadCount(count || 0);
+    };
+
+    fetchUnread();
+
+    const channel = supabase
+      .channel(`notifications-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        () => {
+          fetchUnread();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200 shadow-sm">
@@ -109,6 +143,9 @@ export default function Header() {
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative hidden sm:block"
                 >
                   <Bell className="w-5 h-5 text-gray-600" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                  )}
                 </Link>
 
                 <Link
@@ -221,7 +258,7 @@ export default function Header() {
                     className="px-4 py-3 rounded-lg font-medium text-gray-700 hover:bg-gray-100 transition-all"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    通知
+                    通知{unreadCount > 0 ? ` (${unreadCount})` : ""}
                   </Link>
                   <Link
                     href="/profile"

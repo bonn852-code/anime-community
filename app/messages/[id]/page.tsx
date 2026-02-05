@@ -126,6 +126,12 @@ export default function MessageThreadPage() {
         content: content.trim(),
       });
       if (error) throw error;
+      await supabase.from('notifications').insert({
+        user_id: otherId,
+        actor_id: user.id,
+        type: 'dm',
+        review_id: null,
+      });
       setContent('');
       await fetchThread({ silent: true });
     } catch (error) {
