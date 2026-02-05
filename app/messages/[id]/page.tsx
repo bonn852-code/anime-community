@@ -47,6 +47,7 @@ export default function MessageThreadPage() {
   const readingLockRef = useRef(false);
   const readingTimerRef = useRef<number | null>(null);
   const lastScrollTopRef = useRef(0);
+  const manualHoldRef = useRef(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -97,7 +98,7 @@ export default function MessageThreadPage() {
             if (prev.some((m) => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
-          if (isAtBottomRef.current) {
+          if (isAtBottomRef.current && !manualHoldRef.current) {
             requestAnimationFrame(scrollToBottom);
           }
         }
@@ -269,9 +270,13 @@ export default function MessageThreadPage() {
     if (scrolledUp) {
       setIsAtBottom(false);
       isAtBottomRef.current = false;
+      manualHoldRef.current = true;
     } else {
       setIsAtBottom(atBottom);
       isAtBottomRef.current = atBottom;
+      if (atBottom) {
+        manualHoldRef.current = false;
+      }
     }
     if (!atBottom) {
       readingLockRef.current = true;
@@ -298,7 +303,7 @@ export default function MessageThreadPage() {
     }, 8000);
   };
 
-  const showJumpToLatest = !isAtBottom;
+  const showJumpToLatest = !isAtBottom || manualHoldRef.current;
 
   return (
     <div className="min-h-[100svh] flex flex-col gap-4 overflow-hidden">
@@ -374,6 +379,7 @@ export default function MessageThreadPage() {
             type="button"
             onClick={() => {
               setIsAtBottom(true);
+              manualHoldRef.current = false;
               scrollToBottom();
             }}
             className="absolute right-5 bottom-24 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-pink-600"
