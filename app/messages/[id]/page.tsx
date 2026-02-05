@@ -38,6 +38,7 @@ export default function MessageThreadPage() {
   const [sendError, setSendError] = useState('');
   const listRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const autoScrollRef = useRef(true);
   const [hasMore, setHasMore] = useState(false);
   const [oldestAt, setOldestAt] = useState<string | null>(null);
   const pageSize = 40;
@@ -91,7 +92,9 @@ export default function MessageThreadPage() {
             if (prev.some((m) => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
-          requestAnimationFrame(scrollToBottom);
+          if (autoScrollRef.current) {
+            requestAnimationFrame(scrollToBottom);
+          }
         }
       )
       .subscribe();
@@ -102,27 +105,10 @@ export default function MessageThreadPage() {
   }, [user, otherId]);
 
   useLayoutEffect(() => {
-    scrollToBottom();
+    if (autoScrollRef.current) {
+      scrollToBottom();
+    }
   }, [messages]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [otherId]);
-
-  useEffect(() => {
-    const handleFocus = () => scrollToBottom();
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        scrollToBottom();
-      }
-    };
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, []);
 
   useEffect(() => {
     if (!user || !otherId) return;
@@ -173,13 +159,17 @@ export default function MessageThreadPage() {
         setLoading(false);
       }
       setInitialLoading(false);
-      requestAnimationFrame(scrollToBottom);
+      if (!options?.silent) {
+        autoScrollRef.current = true;
+        requestAnimationFrame(scrollToBottom);
+      }
     }
   };
 
   const loadOlder = async () => {
     if (!oldestAt) return;
     try {
+      autoScrollRef.current = false;
       const { data, error } = await supabase
         .from('direct_messages')
         .select('*')
@@ -251,6 +241,13 @@ export default function MessageThreadPage() {
     );
   }
 
+  const handleScroll = () => {
+    if (!listRef.current) return;
+    const threshold = 80;
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+    autoScrollRef.current = scrollHeight - (scrollTop + clientHeight) < threshold;
+  };
+
   return (
     <div className="min-h-[100svh] flex flex-col gap-4 overflow-hidden">
       <div className="flex items-center gap-3">
@@ -280,6 +277,7 @@ export default function MessageThreadPage() {
 
         <div
           ref={listRef}
+          onScroll={handleScroll}
           className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50/60 via-white to-white px-4 py-5 space-y-4 pb-28"
         >
           {hasMore && (
