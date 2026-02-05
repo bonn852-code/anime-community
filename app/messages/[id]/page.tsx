@@ -111,6 +111,7 @@ export default function MessageThreadPage() {
   }, [user, otherId]);
 
   useLayoutEffect(() => {
+    if (manualHoldRef.current) return;
     if (isAtBottom) {
       scrollToBottom();
     }
