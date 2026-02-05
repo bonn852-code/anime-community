@@ -20,7 +20,6 @@ interface UserRow {
   id: string;
   username: string;
   display_name: string | null;
-  email: string | null;
   is_suspended: boolean | null;
   created_at: string;
 }
