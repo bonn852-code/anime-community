@@ -117,15 +117,7 @@ export default function MessageThreadPage() {
     }
   }, [messages, isAtBottom]);
 
-  useEffect(() => {
-    if (!user || !otherId) return;
-    const interval = setInterval(() => {
-      if (readingLockRef.current) return;
-      if (!isAtBottomRef.current) return;
-      fetchThread({ silent: true });
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [user, otherId]);
+  // Realtime only: polling disabled.
 
   const fetchThread = async (options?: { silent?: boolean }) => {
     if (!options?.silent) {

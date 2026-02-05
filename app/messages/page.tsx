@@ -67,13 +67,7 @@ export default function MessagesPage() {
     };
   }, [user]);
 
-  useEffect(() => {
-    if (!user) return;
-    const interval = setInterval(() => {
-      fetchMessages();
-    }, 8000);
-    return () => clearInterval(interval);
-  }, [user]);
+  // Realtime only: polling disabled.
 
   const fetchMessages = async () => {
     try {
