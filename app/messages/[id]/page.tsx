@@ -220,7 +220,7 @@ export default function MessageThreadPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col gap-4 overflow-hidden">
+    <div className="min-h-[100svh] flex flex-col gap-4 overflow-hidden">
       <div className="flex items-center gap-3">
         <Link href="/messages" className="p-2 rounded-full bg-white shadow hover:shadow-md">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
