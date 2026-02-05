@@ -73,6 +73,14 @@ export default function MessageThreadPage() {
     };
   }, [user, otherId]);
 
+  useEffect(() => {
+    if (!user || !otherId) return;
+    const interval = setInterval(() => {
+      fetchThread({ silent: true });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [user, otherId]);
+
   const fetchThread = async (options?: { silent?: boolean }) => {
     if (!options?.silent) {
       setLoading(true);

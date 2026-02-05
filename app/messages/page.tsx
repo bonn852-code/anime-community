@@ -67,6 +67,14 @@ export default function MessagesPage() {
     };
   }, [user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      fetchMessages();
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   const fetchMessages = async () => {
     try {
       setErrorMessage('');
