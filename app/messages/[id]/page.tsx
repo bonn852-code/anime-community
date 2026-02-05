@@ -38,9 +38,10 @@ export default function MessageThreadPage() {
   const [sendError, setSendError] = useState('');
   const listRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const autoScrollRef = useRef(true);
   const [hasMore, setHasMore] = useState(false);
   const [oldestAt, setOldestAt] = useState<string | null>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const pageSize = 40;
 
   useEffect(() => {
@@ -92,7 +93,7 @@ export default function MessageThreadPage() {
             if (prev.some((m) => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
-          if (autoScrollRef.current) {
+          if (isAtBottom) {
             requestAnimationFrame(scrollToBottom);
           }
         }
@@ -105,10 +106,10 @@ export default function MessageThreadPage() {
   }, [user, otherId]);
 
   useLayoutEffect(() => {
-    if (autoScrollRef.current) {
+    if (isAtBottom) {
       scrollToBottom();
     }
-  }, [messages]);
+  }, [messages, isAtBottom]);
 
   useEffect(() => {
     if (!user || !otherId) return;
@@ -160,16 +161,19 @@ export default function MessageThreadPage() {
       }
       setInitialLoading(false);
       if (!options?.silent) {
-        autoScrollRef.current = true;
+        setIsAtBottom(true);
         requestAnimationFrame(scrollToBottom);
       }
     }
   };
 
   const loadOlder = async () => {
-    if (!oldestAt) return;
+    if (!oldestAt || loadingOlder) return;
     try {
-      autoScrollRef.current = false;
+      setLoadingOlder(true);
+      const container = listRef.current;
+      const prevScrollHeight = container?.scrollHeight ?? 0;
+      const prevScrollTop = container?.scrollTop ?? 0;
       const { data, error } = await supabase
         .from('direct_messages')
         .select('*')
@@ -182,10 +186,17 @@ export default function MessageThreadPage() {
       if (older.length > 0) {
         setMessages((prev) => [...older, ...prev]);
         setOldestAt(older[0].created_at);
+        requestAnimationFrame(() => {
+          if (!listRef.current) return;
+          const newScrollHeight = listRef.current.scrollHeight;
+          listRef.current.scrollTop = newScrollHeight - prevScrollHeight + prevScrollTop;
+        });
       }
       setHasMore((data || []).length === pageSize);
     } catch (error) {
       console.error('過去メッセージ取得エラー:', error);
+    } finally {
+      setLoadingOlder(false);
     }
   };
 
@@ -245,10 +256,14 @@ export default function MessageThreadPage() {
     if (!listRef.current) return;
     const threshold = 80;
     const { scrollTop, scrollHeight, clientHeight } = listRef.current;
-    autoScrollRef.current = scrollHeight - (scrollTop + clientHeight) < threshold;
+    const atBottom = scrollHeight - (scrollTop + clientHeight) < threshold;
+    setIsAtBottom(atBottom);
+    if (scrollTop < 40 && hasMore && !loadingOlder) {
+      loadOlder();
+    }
   };
 
-  const showJumpToLatest = !autoScrollRef.current;
+  const showJumpToLatest = !isAtBottom;
 
   return (
     <div className="min-h-[100svh] flex flex-col gap-4 overflow-hidden">
@@ -284,13 +299,7 @@ export default function MessageThreadPage() {
         >
           {hasMore && (
             <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={loadOlder}
-                className="text-xs text-gray-500 bg-white border border-gray-200 rounded-full px-3 py-1 hover:bg-gray-50"
-              >
-                過去のメッセージを表示
-              </button>
+              <span className="text-xs text-gray-400">過去のメッセージを読み込み中...</span>
             </div>
           )}
           {messages.length > 0 ? (
@@ -328,7 +337,7 @@ export default function MessageThreadPage() {
           <button
             type="button"
             onClick={() => {
-              autoScrollRef.current = true;
+              setIsAtBottom(true);
               scrollToBottom();
             }}
             className="absolute right-5 bottom-24 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-pink-600"
