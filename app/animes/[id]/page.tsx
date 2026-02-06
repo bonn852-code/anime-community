@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Hash, Star, MessageCircle, ArrowRight } from 'lucide-react';
@@ -36,6 +36,7 @@ export default function AnimeDetailPage() {
   const [userRating, setUserRating] = useState<number | null>(null);
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const lastTouchAtRef = useRef(0);
 
   const hashtag = useMemo(() => (anime ? `#${anime.title}` : '#アニメ'), [anime]);
   const displayRating = userRating ? Math.round(userRating) : null;
@@ -141,6 +142,16 @@ export default function AnimeDetailPage() {
     }
   };
 
+  const handleRatingTap = (value: number, fromTouch = false) => {
+    if (ratingSubmitting || !user) return;
+    if (fromTouch) {
+      lastTouchAtRef.current = Date.now();
+    } else if (Date.now() - lastTouchAtRef.current < 500) {
+      return;
+    }
+    handleRating(value);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -232,7 +243,13 @@ export default function AnimeDetailPage() {
                     <button
                       key={value}
                       type="button"
-                      onClick={() => handleRating(value)}
+                      onClick={() => handleRatingTap(value)}
+                      onTouchStart={() => handleRatingTap(value, true)}
+                      onPointerDown={(event) => {
+                        if (event.pointerType === 'touch') {
+                          handleRatingTap(value, true);
+                        }
+                      }}
                       disabled={!user || ratingSubmitting}
                       className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border touch-manipulation ${
                         displayRating && value <= displayRating
