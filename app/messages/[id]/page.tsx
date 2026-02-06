@@ -70,14 +70,19 @@ export default function MessageThreadPage() {
       isAtBottomRef.current = true;
       fetchThread({ silent: true }).then(() => {
         requestAnimationFrame(scrollToBottom);
+        setTimeout(scrollToBottom, 60);
+        setTimeout(scrollToBottom, 180);
       });
     };
+    const handlePageShow = () => {
+      refresh();
+    };
     window.addEventListener('focus', refresh);
-    window.addEventListener('pageshow', refresh);
+    window.addEventListener('pageshow', handlePageShow);
     document.addEventListener('visibilitychange', refresh);
     return () => {
       window.removeEventListener('focus', refresh);
-      window.removeEventListener('pageshow', refresh);
+      window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('visibilitychange', refresh);
     };
   }, [user, otherId]);
@@ -154,6 +159,13 @@ export default function MessageThreadPage() {
       scrollToBottom();
     }
   }, [messages, isAtBottom]);
+
+  useEffect(() => {
+    if (!messages.length) return;
+    if (manualHoldRef.current) return;
+    if (!isAtBottomRef.current) return;
+    setTimeout(scrollToBottom, 0);
+  }, [messages.length]);
 
   useEffect(() => {
     if (!inputRef.current) return;

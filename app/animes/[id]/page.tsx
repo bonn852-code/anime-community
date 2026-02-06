@@ -106,7 +106,8 @@ export default function AnimeDetailPage() {
         .eq('user_id', user!.id)
         .maybeSingle();
 
-      setUserRating(data?.rating ?? null);
+      const raw = data?.rating ?? null;
+      setUserRating(raw ? Math.round(raw) : null);
     } catch (error) {
       console.error('評価取得エラー:', error);
     }
@@ -114,16 +115,17 @@ export default function AnimeDetailPage() {
 
   const handleRating = async (rating: number) => {
     if (!user) return;
+    const normalized = Math.min(5, Math.max(1, Math.round(rating)));
     setRatingSubmitting(true);
     try {
-      setUserRating(rating);
+      setUserRating(normalized);
       const { error } = await supabase
         .from('anime_ratings')
         .upsert(
           {
             user_id: user.id,
             anime_id: animeId,
-            rating,
+            rating: normalized,
           },
           { onConflict: 'user_id,anime_id' }
         );
@@ -231,7 +233,7 @@ export default function AnimeDetailPage() {
                       type="button"
                       onClick={() => handleRating(value)}
                       disabled={!user || ratingSubmitting}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border ${
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border touch-manipulation ${
                         userRating && value <= userRating
                           ? 'bg-pink-500 border-pink-500 text-white'
                           : 'bg-white border-gray-200 text-gray-400 hover:text-pink-500'

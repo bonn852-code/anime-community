@@ -94,13 +94,14 @@ function ReviewNewContent() {
       if (error) throw error;
 
       if (rating) {
+        const normalized = Math.min(5, Math.max(1, Math.round(rating)));
         const { error: ratingError } = await supabase
           .from('anime_ratings')
           .upsert(
             {
               user_id: user.id,
               anime_id: animeId,
-              rating,
+              rating: normalized,
             },
             { onConflict: 'user_id,anime_id' }
           );
@@ -195,7 +196,7 @@ function ReviewNewContent() {
                   key={value}
                   type="button"
                   onClick={() => setRating(value)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border touch-manipulation ${
                     rating && value <= rating
                       ? 'bg-pink-500 border-pink-500 text-white'
                       : 'bg-white border-gray-200 text-gray-400 hover:text-pink-500'
