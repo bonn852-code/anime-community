@@ -38,6 +38,7 @@ export default function AnimeDetailPage() {
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
   const [watchSubmitting, setWatchSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const lastTouchAtRef = useRef(0);
 
   const hashtag = useMemo(() => (anime ? `#${anime.title}` : '#アニメ'), [anime]);
@@ -262,7 +263,22 @@ export default function AnimeDetailPage() {
             </div>
 
             {anime.description && (
-              <p className="text-gray-700 leading-relaxed">{anime.description}</p>
+              <div className="space-y-2">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {showFullDescription
+                    ? anime.description
+                    : `${anime.description.slice(0, 300)}${anime.description.length > 300 ? '…' : ''}`}
+                </p>
+                {anime.description.length > 300 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowFullDescription((prev) => !prev)}
+                    className="text-sm text-pink-600 hover:text-pink-700 font-semibold"
+                  >
+                    {showFullDescription ? '折りたたむ' : 'もっと見る'}
+                  </button>
+                )}
+              </div>
             )}
 
             <div className="grid sm:grid-cols-3 gap-4">
