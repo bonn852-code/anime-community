@@ -27,46 +27,14 @@ export default function HomePage() {
     if (!user) return;
     setRecommendLoading(true);
     try {
-      const { data: myRatings } = await supabase
-        .from('anime_ratings')
-        .select('anime_id')
-        .eq('user_id', user.id)
-        .limit(200);
+      const { data: recommendedUsersRaw } = await supabase
+        .from('recommended_users')
+        .select('recommended_user_id, overlap_count')
+        .order('overlap_count', { ascending: false })
+        .limit(6);
 
-      const ratedIds = Array.from(new Set((myRatings || []).map((r) => r.anime_id)));
-      if (ratedIds.length === 0) {
-        const { data: latestAnimes } = await supabase
-          .from('animes')
-          .select('id, title, image_url')
-          .order('created_at', { ascending: false })
-          .limit(6);
-        setRecommendedAnimes(latestAnimes || []);
-        const { data: latestUsers } = await supabase
-          .from('users')
-          .select('id, username, display_name, avatar_url')
-          .order('created_at', { ascending: false })
-          .limit(6);
-        setRecommendedUsers(latestUsers || []);
-        return;
-      }
-
-      const { data: similarRatings } = await supabase
-        .from('anime_ratings')
-        .select('user_id, anime_id')
-        .in('anime_id', ratedIds)
-        .neq('user_id', user.id)
-        .limit(1000);
-
-      const overlapCounts = new Map<string, number>();
-      (similarRatings || []).forEach((row) => {
-        overlapCounts.set(row.user_id, (overlapCounts.get(row.user_id) || 0) + 1);
-      });
-      const topUserIds = Array.from(overlapCounts.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6)
-        .map(([id]) => id);
-
-      if (topUserIds.length > 0) {
+      const recommendedUserIds = (recommendedUsersRaw || []).map((row) => row.recommended_user_id);
+      if (recommendedUserIds.length > 0) {
         const { data: follows } = await supabase
           .from('follows')
           .select('following_id')
@@ -76,36 +44,38 @@ export default function HomePage() {
         const { data: userProfiles } = await supabase
           .from('users')
           .select('id, username, display_name, avatar_url')
-          .in('id', topUserIds);
-
+          .in('id', recommendedUserIds);
         const filteredUsers = (userProfiles || []).filter((u) => !followingSet.has(u.id));
         setRecommendedUsers(filteredUsers);
+      } else {
+        const { data: latestUsers } = await supabase
+          .from('users')
+          .select('id, username, display_name, avatar_url')
+          .order('created_at', { ascending: false })
+          .limit(6);
+        setRecommendedUsers(latestUsers || []);
+      }
 
-        const { data: candidateRatings } = await supabase
-          .from('anime_ratings')
-          .select('anime_id, rating')
-          .in('user_id', topUserIds)
-          .gte('rating', 4)
-          .limit(1000);
-
-        const candidateCounts = new Map<number, number>();
-        (candidateRatings || []).forEach((row) => {
-          if (ratedIds.includes(row.anime_id)) return;
-          candidateCounts.set(row.anime_id, (candidateCounts.get(row.anime_id) || 0) + 1);
-        });
-        const topAnimeIds = Array.from(candidateCounts.entries())
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 6)
-          .map(([id]) => id);
-
-        if (topAnimeIds.length > 0) {
-          const { data: animeDetails } = await supabase
-            .from('animes')
-            .select('id, title, image_url')
-            .in('id', topAnimeIds);
-          const animeMap = new Map((animeDetails || []).map((a) => [a.id, a]));
-          setRecommendedAnimes(topAnimeIds.map((id) => animeMap.get(id)).filter(Boolean));
-        }
+      const { data: recommendedAnimesRaw } = await supabase
+        .from('recommended_animes')
+        .select('anime_id, score')
+        .order('score', { ascending: false })
+        .limit(6);
+      const recommendedAnimeIds = (recommendedAnimesRaw || []).map((row) => row.anime_id);
+      if (recommendedAnimeIds.length > 0) {
+        const { data: animeDetails } = await supabase
+          .from('animes')
+          .select('id, title, image_url')
+          .in('id', recommendedAnimeIds);
+        const animeMap = new Map((animeDetails || []).map((a) => [a.id, a]));
+        setRecommendedAnimes(recommendedAnimeIds.map((id) => animeMap.get(id)).filter(Boolean));
+      } else {
+        const { data: latestAnimes } = await supabase
+          .from('animes')
+          .select('id, title, image_url')
+          .order('created_at', { ascending: false })
+          .limit(6);
+        setRecommendedAnimes(latestAnimes || []);
       }
     } catch (error) {
       console.error('レコメンド取得エラー:', error);
