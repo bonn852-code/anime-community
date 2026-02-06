@@ -14,6 +14,8 @@ export default function Header() {
   const { user, loading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
+  const isAdmin = Boolean(user?.email && user.email.toLowerCase() === adminEmail);
 
   const isActive = (path: string) => pathname === path;
   const showUnreadBadge = pathname !== "/notifications" && unreadCount > 0;
@@ -140,6 +142,18 @@ export default function Header() {
             >
               DM
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                  isActive("/admin")
+                    ? "bg-pink-100 text-pink-700"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                管理
+              </Link>
+            )}
           </nav>
 
           <div className="flex items-center space-x-2">
@@ -246,6 +260,18 @@ export default function Header() {
               <MessageCircle className="w-4 h-4" />
               DM
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+                  isActive("/admin")
+                    ? "bg-pink-100 text-pink-700"
+                    : "text-gray-700 bg-gray-100"
+                }`}
+              >
+                管理
+              </Link>
+            )}
             {user ? (
               <>
                 <Link
@@ -358,6 +384,19 @@ export default function Header() {
               >
                 DM
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className={`px-4 py-3 rounded-lg font-medium transition-all ${
+                    isActive("/admin")
+                      ? "bg-pink-100 text-pink-700"
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  管理
+                </Link>
+              )}
               {user ? (
                 <>
                   <Link
