@@ -65,7 +65,7 @@ export default function AnimesPage() {
     try {
       const { data, error } = await supabase
         .from('admin_settings')
-        .select('last_sync_at')
+        .select('id, last_sync_at')
         .in('id', [1, 2]);
       if (error) throw error;
       const seasonRow = (data || []).find((row) => row.id === 1);
