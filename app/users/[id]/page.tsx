@@ -44,6 +44,16 @@ interface FavoriteAnime {
   } | null;
 }
 
+interface WatchlistItem {
+  anime_id: number;
+  status: 'plan' | 'watching' | 'completed' | 'paused';
+  animes: {
+    id: number;
+    title: string;
+    image_url: string | null;
+  } | null;
+}
+
 export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -54,6 +64,7 @@ export default function UserProfilePage() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [favorites, setFavorites] = useState<FavoriteAnime[]>([]);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const handle = useMemo(() => {
@@ -78,7 +89,7 @@ export default function UserProfilePage() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      await Promise.all([fetchProfile(), fetchStats(), fetchReviews(), fetchFavorites()]);
+      await Promise.all([fetchProfile(), fetchStats(), fetchReviews(), fetchFavorites(), fetchWatchlist()]);
     } finally {
       setLoading(false);
     }
@@ -163,6 +174,38 @@ export default function UserProfilePage() {
     });
     setFavorites(normalized);
   };
+
+  const fetchWatchlist = async () => {
+    const { data, error } = await supabase
+      .from('watchlists')
+      .select('anime_id, status, animes (id, title, image_url)')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('視聴リスト取得エラー:', error);
+      return;
+    }
+
+    const normalized = (data || []).map((item) => {
+      const animeValue = Array.isArray(item.animes) ? item.animes[0] ?? null : item.animes ?? null;
+      return { ...item, animes: animeValue };
+    });
+    setWatchlist(normalized);
+  };
+
+  const watchlistGroups = useMemo(() => {
+    const groups: Record<'plan' | 'watching' | 'completed' | 'paused', WatchlistItem[]> = {
+      plan: [],
+      watching: [],
+      completed: [],
+      paused: [],
+    };
+    watchlist.forEach((item) => {
+      groups[item.status].push(item);
+    });
+    return groups;
+  }, [watchlist]);
 
   if (authLoading || loading) {
     return (
@@ -279,6 +322,65 @@ export default function UserProfilePage() {
           </div>
         ) : (
           <div className="card p-8 text-center text-gray-600">まだ感想が投稿されていません</div>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-900">視聴リスト</h2>
+          <span className="text-sm text-gray-500">{watchlist.length}件</span>
+        </div>
+
+        {watchlist.length > 0 ? (
+          <div className="grid md:grid-cols-2 gap-6">
+            {(['watching', 'plan', 'completed', 'paused'] as const).map((status) => {
+              const label =
+                status === 'watching'
+                  ? '見てる'
+                  : status === 'plan'
+                    ? '見たい'
+                    : status === 'completed'
+                      ? '見た'
+                      : '中断';
+              const items = watchlistGroups[status];
+              if (items.length === 0) return null;
+              return (
+                <div key={status} className="card p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-gray-900">{label}</p>
+                    <span className="text-xs text-gray-500">{items.length}件</span>
+                  </div>
+                  <div className="space-y-2">
+                    {items.slice(0, 6).map((item) => (
+                      <div key={item.anime_id} className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                          {item.animes?.image_url ? (
+                            <img
+                              src={item.animes.image_url}
+                              alt={item.animes.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                              —
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-700 line-clamp-1">
+                          {item.animes?.title || 'タイトル未設定'}
+                        </p>
+                      </div>
+                    ))}
+                    {items.length > 6 && (
+                      <p className="text-xs text-gray-400">他 {items.length - 6} 件</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="card p-8 text-center text-gray-600">まだ視聴リストがありません</div>
         )}
       </div>
 
