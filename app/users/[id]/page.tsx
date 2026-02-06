@@ -54,6 +54,22 @@ interface WatchlistItem {
   } | null;
 }
 
+interface UserCategory {
+  id: number;
+  name: string;
+}
+
+interface UserCategoryAnime {
+  id: number;
+  anime_id: number;
+  category_id: number;
+  animes: {
+    id: number;
+    title: string;
+    image_url: string | null;
+  } | null;
+}
+
 export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
@@ -65,6 +81,8 @@ export default function UserProfilePage() {
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [favorites, setFavorites] = useState<FavoriteAnime[]>([]);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [categories, setCategories] = useState<UserCategory[]>([]);
+  const [categoryItems, setCategoryItems] = useState<UserCategoryAnime[]>([]);
   const [loading, setLoading] = useState(true);
 
   const handle = useMemo(() => {
@@ -89,7 +107,15 @@ export default function UserProfilePage() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      await Promise.all([fetchProfile(), fetchStats(), fetchReviews(), fetchFavorites(), fetchWatchlist()]);
+      await Promise.all([
+        fetchProfile(),
+        fetchStats(),
+        fetchReviews(),
+        fetchFavorites(),
+        fetchWatchlist(),
+        fetchCategories(),
+        fetchCategoryItems(),
+      ]);
     } finally {
       setLoading(false);
     }
@@ -193,6 +219,46 @@ export default function UserProfilePage() {
     });
     setWatchlist(normalized);
   };
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from('user_categories')
+      .select('id, name')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('カテゴリ取得エラー:', error);
+      return;
+    }
+    setCategories(data || []);
+  };
+
+  const fetchCategoryItems = async () => {
+    const { data, error } = await supabase
+      .from('user_category_animes')
+      .select('id, anime_id, category_id, animes (id, title, image_url)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('カテゴリ内アニメ取得エラー:', error);
+      return;
+    }
+    const normalized = (data || []).map((item) => {
+      const animeValue = Array.isArray(item.animes) ? item.animes[0] ?? null : item.animes ?? null;
+      return { ...item, animes: animeValue };
+    });
+    setCategoryItems(normalized);
+  };
+
+  const categoryGroups = useMemo(() => {
+    const groups = new Map<number, UserCategoryAnime[]>();
+    categoryItems.forEach((item) => {
+      const list = groups.get(item.category_id) || [];
+      list.push(item);
+      groups.set(item.category_id, list);
+    });
+    return groups;
+  }, [categoryItems]);
 
   const watchlistGroups = useMemo(() => {
     const groups: Record<'plan' | 'watching' | 'completed' | 'paused', WatchlistItem[]> = {
@@ -381,6 +447,60 @@ export default function UserProfilePage() {
           </div>
         ) : (
           <div className="card p-8 text-center text-gray-600">まだ視聴リストがありません</div>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-900">カスタムカテゴリ</h2>
+          <span className="text-sm text-gray-500">{categories.length}件</span>
+        </div>
+
+        {categories.length > 0 ? (
+          <div className="grid md:grid-cols-2 gap-6">
+            {categories.map((category) => {
+              const items = categoryGroups.get(category.id) || [];
+              return (
+                <div key={category.id} className="card p-5 space-y-3 bg-pink-50/50">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-gray-900">{category.name}</p>
+                    <span className="text-xs text-gray-500">{items.length}件</span>
+                  </div>
+                  {items.length > 0 ? (
+                    <div className="space-y-2">
+                      {items.slice(0, 6).map((item) => (
+                        <div key={item.id} className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex-shrink-0">
+                            {item.animes?.image_url ? (
+                              <img
+                                src={item.animes.image_url}
+                                alt={item.animes.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                                —
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-700 line-clamp-1">
+                            {item.animes?.title || 'タイトル未設定'}
+                          </p>
+                        </div>
+                      ))}
+                      {items.length > 6 && (
+                        <p className="text-xs text-gray-400">他 {items.length - 6} 件</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">まだ追加されていません</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="card p-8 text-center text-gray-600">カテゴリがまだありません</div>
         )}
       </div>
 
