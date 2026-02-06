@@ -83,7 +83,16 @@ export default function MessagesPage() {
     };
   }, [user]);
 
-  // Realtime only: polling disabled.
+  useEffect(() => {
+    if (!user) return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      fetchMessages();
+    }, 10000);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [user]);
 
   const fetchMessages = async () => {
     try {

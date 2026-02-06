@@ -49,6 +49,7 @@ export default function MessageThreadPage() {
   const lastScrollTopRef = useRef(0);
   const manualHoldRef = useRef(false);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const latestAtRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -103,6 +104,24 @@ export default function MessageThreadPage() {
     }, 50);
   };
 
+  const mergeIncoming = (incoming: MessageRow[]) => {
+    if (incoming.length === 0) return;
+    setMessages((prev) => {
+      const existingIds = new Set(prev.map((m) => m.id));
+      const merged = [...prev];
+      incoming.forEach((msg) => {
+        if (!existingIds.has(msg.id)) {
+          merged.push(msg);
+        }
+      });
+      return merged;
+    });
+    const newest = incoming[incoming.length - 1];
+    if (newest) {
+      latestAtRef.current = newest.created_at;
+    }
+  };
+
   useEffect(() => {
     if (!user || !otherId) return;
     const channel = supabase
@@ -116,10 +135,7 @@ export default function MessageThreadPage() {
             (msg.sender_id === user.id && msg.recipient_id === otherId) ||
             (msg.sender_id === otherId && msg.recipient_id === user.id);
           if (!isRelevant) return;
-          setMessages((prev) => {
-            if (prev.some((m) => m.id === msg.id)) return prev;
-            return [...prev, msg];
-          });
+          mergeIncoming([msg]);
           if (isAtBottomRef.current && !manualHoldRef.current) {
             requestAnimationFrame(scrollToBottom);
           }
@@ -171,7 +187,11 @@ export default function MessageThreadPage() {
       const chronological = [...newestFirst].reverse();
       setMessages(chronological);
       if (chronological.length > 0) {
+        latestAtRef.current = chronological[chronological.length - 1].created_at;
         setOldestAt(chronological[0].created_at);
+      } else {
+        latestAtRef.current = null;
+        setOldestAt(null);
       }
       setHasMore(newestFirst.length === pageSize);
 
@@ -195,6 +215,44 @@ export default function MessageThreadPage() {
       }
     }
   };
+
+  const fetchNewer = async () => {
+    if (!latestAtRef.current) {
+      await fetchThread({ silent: true });
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('direct_messages')
+        .select('*')
+        .or(`and(sender_id.eq.${user!.id},recipient_id.eq.${otherId}),and(sender_id.eq.${otherId},recipient_id.eq.${user!.id})`)
+        .gt('created_at', latestAtRef.current)
+        .order('created_at', { ascending: true })
+        .limit(pageSize);
+      if (error) throw error;
+      const incoming = data || [];
+      if (incoming.length > 0) {
+        mergeIncoming(incoming);
+        if (isAtBottomRef.current && !manualHoldRef.current) {
+          requestAnimationFrame(scrollToBottom);
+        }
+      }
+    } catch (error) {
+      console.error('新着メッセージ取得エラー:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || !otherId) return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      if (readingLockRef.current) return;
+      fetchNewer();
+    }, 7000);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [user, otherId]);
 
   const loadOlder = async () => {
     if (!oldestAt || loadingOlder) return;
@@ -381,7 +439,7 @@ export default function MessageThreadPage() {
                           : 'bg-white text-gray-800 border border-gray-100 rounded-bl-md'
                       }`}
                     >
-                      {msg.content}
+                      <span className="whitespace-pre-wrap break-words">{msg.content}</span>
                     </div>
                     <p className={`mt-1 text-[11px] text-gray-400 ${isMine ? 'text-right' : 'text-left'}`}>
                       {new Date(msg.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
