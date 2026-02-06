@@ -10,6 +10,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "AnimeCom - アニメ感想共有コミュニティ",
   description: "アニメ好き同士で感想を共有し、交流できるプラットフォーム",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

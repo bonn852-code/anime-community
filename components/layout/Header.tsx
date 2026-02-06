@@ -71,10 +71,12 @@ export default function Header() {
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center space-x-2 group">
-            <div className="bg-gradient-to-br from-pink-500 to-rose-500 p-2 rounded-xl group-hover:scale-110 transition-transform">
-              <Heart className="w-6 h-6 text-white" fill="white" />
-            </div>
+          <Link href="/" className="flex items-center space-x-3 group">
+            <img
+              src="/animecom-logo.png"
+              alt="AnimeCom"
+              className="h-8 w-auto"
+            />
             <span className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent hidden sm:block">
               AnimeCom
             </span>
