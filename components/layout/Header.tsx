@@ -44,6 +44,10 @@ export default function Header() {
 
     fetchUnread();
     const interval = setInterval(fetchUnread, 8000);
+    const handleRead = () => {
+      fetchUnread();
+    };
+    window.addEventListener("notifications:read", handleRead as EventListener);
 
     const channel = supabase
       .channel(`notifications-${user.id}`)
@@ -59,6 +63,7 @@ export default function Header() {
     return () => {
       supabase.removeChannel(channel);
       clearInterval(interval);
+      window.removeEventListener("notifications:read", handleRead as EventListener);
     };
   }, [user]);
 

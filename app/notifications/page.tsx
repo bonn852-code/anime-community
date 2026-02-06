@@ -69,6 +69,7 @@ export default function NotificationsPage() {
           .from('notifications')
           .update({ is_read: true })
           .in('id', unreadIds);
+        window.dispatchEvent(new CustomEvent('notifications:read'));
       }
     } catch (error) {
       console.error('通知取得エラー:', error);
