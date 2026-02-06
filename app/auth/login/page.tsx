@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, LogIn } from 'lucide-react';
-import { signIn } from '@/lib/supabase';
+import { supabase, signIn } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +12,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
 
   useEffect(() => {
     const suspendedMessage = localStorage.getItem('suspension_message');
@@ -34,6 +35,22 @@ export default function LoginPage() {
       setError(err.message || 'ログインに失敗しました');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDiscordLogin = async () => {
+    setError('');
+    setOauthLoading(true);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+    } catch (err: any) {
+      setError(err.message || 'Discordログインに失敗しました');
+      setOauthLoading(false);
     }
   };
 
@@ -113,6 +130,15 @@ export default function LoginPage() {
               <span className="px-4 bg-white text-gray-500">または</span>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={handleDiscordLogin}
+            disabled={oauthLoading}
+            className="w-full border border-gray-200 rounded-lg py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            {oauthLoading ? 'Discordに接続中...' : 'Discordでログイン'}
+          </button>
 
           <div className="text-center">
             <p className="text-gray-600">

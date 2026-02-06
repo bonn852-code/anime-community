@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Mail, Lock, User, UserPlus } from 'lucide-react';
-import { signUp } from '@/lib/supabase';
+import { supabase, signUp } from '@/lib/supabase';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -55,6 +56,22 @@ export default function SignupPage() {
       setError(err.message || '登録に失敗しました');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDiscordLogin = async () => {
+    setError('');
+    setOauthLoading(true);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'discord',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+    } catch (err: any) {
+      setError(err.message || 'Discordログインに失敗しました');
+      setOauthLoading(false);
     }
   };
 
@@ -188,6 +205,15 @@ export default function SignupPage() {
               <span className="px-4 bg-white text-gray-500">または</span>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={handleDiscordLogin}
+            disabled={oauthLoading}
+            className="w-full border border-gray-200 rounded-lg py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+          >
+            {oauthLoading ? 'Discordに接続中...' : 'Discordで登録/ログイン'}
+          </button>
 
           <div className="text-center">
             <p className="text-gray-600">
