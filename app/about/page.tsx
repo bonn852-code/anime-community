@@ -4,7 +4,7 @@ export default function AboutPage() {
       <div className="card p-8 md:p-10 bg-gradient-to-br from-pink-50 via-white to-purple-50">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">このサイトについて</h1>
         <p className="text-gray-600 text-lg">
-          AnimeComはアニメの感想を共有し、同じ作品が好きな仲間と繋がれるコミュニティです。
+          AniWorldはアニメの感想を共有し、同じ作品が好きな仲間と繋がれるコミュニティです。
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <span className="badge bg-pink-100 text-pink-700">感想投稿</span>

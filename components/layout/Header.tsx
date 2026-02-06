@@ -76,7 +76,7 @@ export default function Header() {
           <Link href="/" className="flex items-center space-x-1 group">
             <img
               src="/animecom-logo.png"
-              alt="AnimeCom"
+              alt="AniWorld"
               className="h-24 w-auto sm:h-28 md:h-32"
             />
           </Link>

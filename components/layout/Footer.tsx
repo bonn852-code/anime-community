@@ -18,11 +18,11 @@ export default function Footer() {
             <div className="flex items-center space-x-3 mb-4 ml-4">
               <img
                 src="/animecom-logo.png"
-                alt="AnimeCom"
+                alt="AniWorld"
                 className="h-14 w-auto sm:h-16"
               />
               <span className="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
-                AnimeCom
+                AniWorld
               </span>
             </div>
             <p className="text-gray-600 text-sm">
@@ -71,7 +71,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-200 mt-8 pt-6 text-center">
           <p className="text-sm text-gray-600">
-            © 2026 AnimeCom. All rights reserved.
+            © 2026 AniWorld. All rights reserved.
           </p>
         </div>
       </div>
