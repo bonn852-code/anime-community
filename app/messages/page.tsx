@@ -49,6 +49,22 @@ export default function MessagesPage() {
 
   useEffect(() => {
     if (!user) return;
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetchMessages();
+    };
+    window.addEventListener('focus', refresh);
+    window.addEventListener('pageshow', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('pageshow', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
     const channel = supabase
       .channel(`dm-list-${user.id}`)
       .on(

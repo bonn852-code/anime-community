@@ -48,6 +48,7 @@ export default function MessageThreadPage() {
   const readingTimerRef = useRef<number | null>(null);
   const lastScrollTopRef = useRef(0);
   const manualHoldRef = useRef(false);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -58,6 +59,27 @@ export default function MessageThreadPage() {
       fetchThread();
     }
   }, [user, authLoading, otherId]);
+
+  useEffect(() => {
+    if (!user || !otherId) return;
+    const refresh = () => {
+      if (document.visibilityState !== 'visible') return;
+      manualHoldRef.current = false;
+      setIsAtBottom(true);
+      isAtBottomRef.current = true;
+      fetchThread({ silent: true }).then(() => {
+        requestAnimationFrame(scrollToBottom);
+      });
+    };
+    window.addEventListener('focus', refresh);
+    window.addEventListener('pageshow', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => {
+      window.removeEventListener('focus', refresh);
+      window.removeEventListener('pageshow', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+    };
+  }, [user, otherId]);
 
   const scrollToBottom = () => {
     const target = bottomRef.current || listRef.current;
@@ -116,6 +138,12 @@ export default function MessageThreadPage() {
       scrollToBottom();
     }
   }, [messages, isAtBottom]);
+
+  useEffect(() => {
+    if (!inputRef.current) return;
+    inputRef.current.style.height = 'auto';
+    inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 160)}px`;
+  }, [content]);
 
   // Realtime only: polling disabled.
 
@@ -201,8 +229,7 @@ export default function MessageThreadPage() {
     }
   };
 
-  const handleSend = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const submitMessage = async () => {
     if (!user || !content.trim()) return;
     if (otherId === user.id) {
       setSendError('自分自身には送信できません');
@@ -232,6 +259,11 @@ export default function MessageThreadPage() {
     } finally {
       setSending(false);
     }
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    submitMessage();
   };
 
   const title = useMemo(() => {
@@ -382,18 +414,32 @@ export default function MessageThreadPage() {
           </button>
         )}
 
-        <form onSubmit={handleSend} className="p-4 border-t border-gray-100 bg-white space-y-2 sticky bottom-0">
+        <form onSubmit={handleSubmit} className="p-4 border-t border-gray-100 bg-white space-y-2 sticky bottom-0">
           {sendError && (
             <p className="text-xs text-red-500">{sendError}</p>
           )}
           <div className="flex items-center gap-3">
-            <input
+            <textarea
+              ref={inputRef}
+              rows={1}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="input-field"
+              onChange={(e) => {
+                setContent(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault();
+                  if (!sending) {
+                    submitMessage();
+                  }
+                }
+              }}
+              className="input-field min-h-[44px] max-h-40 resize-none py-3"
               placeholder="メッセージを入力"
             />
-            <button type="submit" className="btn-primary inline-flex items-center" disabled={sending}>
+            <button type="submit" className="btn-primary inline-flex items-center" disabled={sending || !content.trim()}>
               <Send className="w-4 h-4 mr-1" />
               送信
             </button>
