@@ -210,7 +210,7 @@ export default function SignupPage() {
             type="button"
             onClick={handleDiscordLogin}
             disabled={oauthLoading}
-            className="w-full border border-gray-200 rounded-lg py-3 font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full rounded-full py-3 font-semibold text-white bg-[#5865F2] hover:bg-[#4F5AE6] transition-colors shadow-sm"
           >
             {oauthLoading ? 'Discordに接続中...' : 'Discordで登録/ログイン'}
           </button>
