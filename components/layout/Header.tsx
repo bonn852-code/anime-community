@@ -72,12 +72,12 @@ export default function Header() {
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4 max-w-7xl">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-20 md:h-24">
           <Link href="/" className="flex items-center space-x-3 group">
             <img
               src="/animecom-logo.png"
               alt="AnimeCom"
-              className="h-10 w-auto sm:h-12"
+              className="h-14 w-auto sm:h-16 md:h-20"
             />
           </Link>
 
