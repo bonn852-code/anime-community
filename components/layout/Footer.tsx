@@ -19,7 +19,7 @@ export default function Footer() {
               <img
                 src="/animecom-logo.png"
                 alt="AnimeCom"
-                className="h-7 w-auto"
+                className="h-9 w-auto sm:h-10"
               />
               <span className="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
                 AnimeCom

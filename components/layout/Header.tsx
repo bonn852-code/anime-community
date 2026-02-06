@@ -75,11 +75,8 @@ export default function Header() {
             <img
               src="/animecom-logo.png"
               alt="AnimeCom"
-              className="h-8 w-auto"
+              className="h-10 w-auto sm:h-12"
             />
-            <span className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent hidden sm:block">
-              AnimeCom
-            </span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-1">
