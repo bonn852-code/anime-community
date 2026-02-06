@@ -17,6 +17,7 @@ interface ReviewWithDetails {
     username: string;
     display_name: string | null;
     avatar_url: string | null;
+    avatar_position: string | null;
   } | null;
   animes: {
     id: number;
@@ -45,7 +46,7 @@ function ReviewsContent() {
           content,
           has_spoiler,
           created_at,
-          users (username, display_name, avatar_url),
+          users (username, display_name, avatar_url, avatar_position),
           animes (id, title)
         `)
         .order('created_at', { ascending: false });
@@ -112,6 +113,7 @@ function ReviewsContent() {
                           src={review.users.avatar_url}
                           alt={review.users.username}
                           className="w-full h-full object-cover"
+                          style={{ objectPosition: review.users.avatar_position || 'center' }}
                         />
                       ) : (
                         review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()

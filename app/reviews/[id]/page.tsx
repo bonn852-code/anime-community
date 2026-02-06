@@ -19,6 +19,7 @@ interface ReviewDetail {
     username: string;
     display_name: string | null;
     avatar_url: string | null;
+    avatar_position: string | null;
   } | null;
   animes: {
     id: number;
@@ -35,6 +36,7 @@ interface CommentWithUser {
     username: string;
     display_name: string | null;
     avatar_url: string | null;
+    avatar_position: string | null;
   } | null;
 }
 
@@ -79,7 +81,7 @@ export default function ReviewDetailPage() {
           has_spoiler,
           created_at,
           user_id,
-          users (username, display_name, avatar_url),
+          users (username, display_name, avatar_url, avatar_position),
           animes (id, title)
         `)
         .eq('id', reviewId)
@@ -109,7 +111,7 @@ export default function ReviewDetailPage() {
         content,
         created_at,
         user_id,
-        users (username, display_name, avatar_url)
+        users (username, display_name, avatar_url, avatar_position)
       `)
       .eq('review_id', reviewId)
       .order('created_at', { ascending: true });
@@ -304,6 +306,7 @@ export default function ReviewDetailPage() {
                   src={review.users.avatar_url}
                   alt={review.users.username}
                   className="w-full h-full object-cover"
+                  style={{ objectPosition: review.users.avatar_position || 'center' }}
                 />
               ) : (
                 review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
@@ -373,6 +376,7 @@ export default function ReviewDetailPage() {
                           src={comment.users.avatar_url}
                           alt={comment.users.username}
                           className="w-full h-full object-cover"
+                          style={{ objectPosition: comment.users.avatar_position || 'center' }}
                         />
                       ) : (
                         comment.users?.display_name?.charAt(0) || comment.users?.username.charAt(0).toUpperCase()
