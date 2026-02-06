@@ -15,11 +15,11 @@ export default function Footer() {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="col-span-1">
-            <div className="flex items-center space-x-3 mb-4">
+            <div className="flex items-center space-x-3 mb-4 ml-4">
               <img
                 src="/animecom-logo.png"
                 alt="AnimeCom"
-                className="h-9 w-auto sm:h-10"
+                className="h-14 w-auto sm:h-16"
               />
               <span className="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
                 AnimeCom
