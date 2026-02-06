@@ -1,7 +1,15 @@
+'use client';
+
 import Link from 'next/link';
 import { Heart } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname.startsWith('/messages')) {
+    return null;
+  }
+
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
       <div className="container mx-auto px-4 py-8 max-w-7xl">

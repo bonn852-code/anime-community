@@ -389,7 +389,7 @@ export default function MessageThreadPage() {
   const showJumpToLatest = !isAtBottom || manualHoldRef.current;
 
   return (
-    <div className="min-h-[100svh] flex flex-col gap-4 overflow-hidden">
+    <div className="-my-8 h-[calc(100svh-64px)] flex flex-col gap-4 overflow-hidden">
       <div className="flex items-center gap-3">
         <Link href="/messages" className="p-2 rounded-full bg-white shadow hover:shadow-md">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
@@ -472,7 +472,7 @@ export default function MessageThreadPage() {
           </button>
         )}
 
-        <form onSubmit={handleSubmit} className="p-4 border-t border-gray-100 bg-white space-y-2 sticky bottom-0">
+        <form onSubmit={handleSubmit} className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-gray-100 bg-white space-y-2 sticky bottom-0">
           {sendError && (
             <p className="text-xs text-red-500">{sendError}</p>
           )}

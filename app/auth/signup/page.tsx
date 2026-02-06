@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Mail, Lock, User, UserPlus } from 'lucide-react';
 import { signUp } from '@/lib/supabase';
@@ -13,6 +13,12 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [successMessage]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +61,7 @@ export default function SignupPage() {
   return (
     <div className="min-h-[calc(100vh-200px)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="card p-8 animate-fade-in">
+        <div ref={cardRef} className="card p-8 animate-fade-in">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 mb-4">
               <UserPlus className="w-8 h-8 text-white" />

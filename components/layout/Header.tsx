@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Heart, User, Bell, Menu, X, LogOut } from "lucide-react";
+import { Heart, User, Bell, Menu, X, LogOut, Home, Film, MessageCircle, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/AuthProvider";
 import { signOut } from "@/lib/supabase";
@@ -182,6 +182,106 @@ export default function Header() {
                 <Menu className="w-6 h-6 text-gray-600" />
               )}
             </button>
+          </div>
+        </div>
+
+        <div className="md:hidden pb-2">
+          <div className="flex items-center gap-2 overflow-x-auto py-2">
+            <Link
+              href="/"
+              className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+                isActive("/")
+                  ? "bg-pink-100 text-pink-700"
+                  : "text-gray-700 bg-gray-100"
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              ホーム
+            </Link>
+            <Link
+              href="/animes"
+              className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+                isActive("/animes")
+                  ? "bg-pink-100 text-pink-700"
+                  : "text-gray-700 bg-gray-100"
+              }`}
+            >
+              <Film className="w-4 h-4" />
+              アニメ
+            </Link>
+            <Link
+              href="/reviews"
+              className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+                isActive("/reviews")
+                  ? "bg-pink-100 text-pink-700"
+                  : "text-gray-700 bg-gray-100"
+              }`}
+            >
+              <Heart className="w-4 h-4" />
+              感想
+            </Link>
+            <Link
+              href="/users"
+              className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+                isActive("/users")
+                  ? "bg-pink-100 text-pink-700"
+                  : "text-gray-700 bg-gray-100"
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              ユーザー
+            </Link>
+            <Link
+              href="/messages"
+              className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+                isActive("/messages")
+                  ? "bg-pink-100 text-pink-700"
+                  : "text-gray-700 bg-gray-100"
+              }`}
+            >
+              <MessageCircle className="w-4 h-4" />
+              DM
+            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/notifications"
+                  className={`relative flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+                    isActive("/notifications")
+                      ? "bg-pink-100 text-pink-700"
+                      : "text-gray-700 bg-gray-100"
+                  }`}
+                >
+                  <Bell className="w-4 h-4" />
+                  通知
+                  {showUnreadBadge && (
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                  )}
+                </Link>
+                <Link
+                  href="/profile"
+                  className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+                    isActive("/profile")
+                      ? "bg-pink-100 text-pink-700"
+                      : "text-gray-700 bg-gray-100"
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  プロフ
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/auth/login"
+                className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+                  isActive("/auth/login")
+                    ? "bg-pink-100 text-pink-700"
+                    : "text-gray-700 bg-gray-100"
+                }`}
+              >
+                ログイン
+              </Link>
+            )}
           </div>
         </div>
 
