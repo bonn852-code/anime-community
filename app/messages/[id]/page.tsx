@@ -87,6 +87,14 @@ export default function MessageThreadPage() {
     };
   }, [user, otherId]);
 
+  useEffect(() => {
+    const previous = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    return () => {
+      window.history.scrollRestoration = previous;
+    };
+  }, []);
+
   const scrollToBottom = () => {
     const target = bottomRef.current || listRef.current;
     if (!target) return;
@@ -165,6 +173,8 @@ export default function MessageThreadPage() {
     if (manualHoldRef.current) return;
     if (!isAtBottomRef.current) return;
     setTimeout(scrollToBottom, 0);
+    setTimeout(scrollToBottom, 120);
+    setTimeout(scrollToBottom, 320);
   }, [messages.length]);
 
   useEffect(() => {

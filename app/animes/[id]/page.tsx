@@ -38,6 +38,7 @@ export default function AnimeDetailPage() {
   const [loading, setLoading] = useState(true);
 
   const hashtag = useMemo(() => (anime ? `#${anime.title}` : '#アニメ'), [anime]);
+  const displayRating = userRating ? Math.round(userRating) : null;
 
   useEffect(() => {
     if (!Number.isFinite(animeId)) return;
@@ -234,13 +235,13 @@ export default function AnimeDetailPage() {
                       onClick={() => handleRating(value)}
                       disabled={!user || ratingSubmitting}
                       className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border touch-manipulation ${
-                        userRating && value <= userRating
+                        displayRating && value <= displayRating
                           ? 'bg-pink-500 border-pink-500 text-white'
                           : 'bg-white border-gray-200 text-gray-400 hover:text-pink-500'
                       }`}
                       title={`${value}点`}
                     >
-                      <Star className="w-5 h-5" fill={userRating && value <= userRating ? 'currentColor' : 'none'} />
+                      <Star className="w-5 h-5" fill={displayRating && value <= displayRating ? 'currentColor' : 'none'} />
                     </button>
                   ))}
                 </div>
