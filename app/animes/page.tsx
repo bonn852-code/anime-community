@@ -12,6 +12,8 @@ export default function AnimesPage() {
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [filteredAnimes, setFilteredAnimes] = useState<Anime[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [genreFilter, setGenreFilter] = useState('');
+  const [seasonFilter, setSeasonFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncMessage, setSyncMessage] = useState('');
@@ -42,7 +44,7 @@ export default function AnimesPage() {
 
   useEffect(() => {
     filterAnimes();
-  }, [searchQuery, animes]);
+  }, [searchQuery, animes, genreFilter, seasonFilter]);
 
   const fetchAnimes = async () => {
     try {
@@ -216,7 +218,12 @@ export default function AnimesPage() {
 
   const filterAnimes = () => {
     if (!searchQuery.trim()) {
-      setFilteredAnimes(animes);
+      const filtered = animes.filter((anime) => {
+        const byGenre = genreFilter ? anime.genre?.includes(genreFilter) : true;
+        const bySeason = seasonFilter ? anime.season === seasonFilter : true;
+        return byGenre && bySeason;
+      });
+      setFilteredAnimes(filtered);
       return;
     }
 
@@ -224,17 +231,23 @@ export default function AnimesPage() {
     const isHashtag = query.startsWith('#');
     
     const filtered = animes.filter((anime) => {
+      const byGenre = genreFilter ? anime.genre?.includes(genreFilter) : true;
+      const bySeason = seasonFilter ? anime.season === seasonFilter : true;
       if (isHashtag) {
         const tag = query.slice(1);
         return (
-          anime.title.toLowerCase().includes(tag) ||
-          anime.title_en?.toLowerCase().includes(tag) ||
-          anime.genre?.some((g) => g.toLowerCase().includes(tag))
+          (anime.title.toLowerCase().includes(tag) ||
+            anime.title_en?.toLowerCase().includes(tag) ||
+            anime.genre?.some((g) => g.toLowerCase().includes(tag))) &&
+          byGenre &&
+          bySeason
         );
       }
       return (
-        anime.title.toLowerCase().includes(query) ||
-        anime.title_en?.toLowerCase().includes(query)
+        (anime.title.toLowerCase().includes(query) ||
+          anime.title_en?.toLowerCase().includes(query)) &&
+        byGenre &&
+        bySeason
       );
     });
 
@@ -326,6 +339,38 @@ export default function AnimesPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input-field pl-10"
           />
+        </div>
+        <div className="mt-4 grid sm:grid-cols-2 gap-3">
+          <select
+            value={genreFilter}
+            onChange={(e) => setGenreFilter(e.target.value)}
+            className="input-field"
+          >
+            <option value="">ジャンルで絞り込み</option>
+            {Array.from(
+              new Set(
+                animes.flatMap((anime) => anime.genre || [])
+              )
+            ).map((genre) => (
+              <option key={genre} value={genre}>
+                {genre}
+              </option>
+            ))}
+          </select>
+          <select
+            value={seasonFilter}
+            onChange={(e) => setSeasonFilter(e.target.value)}
+            className="input-field"
+          >
+            <option value="">シーズンで絞り込み</option>
+            {Array.from(new Set(animes.map((anime) => anime.season).filter(Boolean) as string[])).map(
+              (season) => (
+                <option key={season} value={season}>
+                  {season}
+                </option>
+              )
+            )}
+          </select>
         </div>
         <div className="mt-3 flex items-start gap-2 text-sm text-gray-600">
           <Hash className="w-4 h-4 mt-0.5 flex-shrink-0" />

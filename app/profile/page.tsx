@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings, MessageCircle, Heart, Save, UploadCloud } from 'lucide-react';
+import { Settings, MessageCircle, Heart, Save, UploadCloud, Tag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { maskNgWords } from '@/lib/ngWordFilter';
 import { useAuth } from '@/lib/AuthProvider';
@@ -47,6 +47,22 @@ interface Badge {
   tone: string;
 }
 
+interface UserCategory {
+  id: number;
+  name: string;
+}
+
+interface UserCategoryAnime {
+  id: number;
+  anime_id: number;
+  category_id: number;
+  animes: {
+    id: number;
+    title: string;
+    image_url: string | null;
+  } | null;
+}
+
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -56,6 +72,11 @@ export default function ProfilePage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<FavoriteAnime[]>([]);
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [categories, setCategories] = useState<UserCategory[]>([]);
+  const [categoryItems, setCategoryItems] = useState<UserCategoryAnime[]>([]);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [categoryAnimeId, setCategoryAnimeId] = useState<number | ''>('');
+  const [categoryTargetId, setCategoryTargetId] = useState<number | ''>('');
   const [likesReceived, setLikesReceived] = useState(0);
   const [animes, setAnimes] = useState<AnimeOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,6 +113,8 @@ export default function ProfilePage() {
         fetchFavorites(),
         fetchWatchlist(),
         fetchLikesReceived(),
+        fetchCategories(),
+        fetchCategoryItems(),
         fetchAnimes(),
       ]);
     } finally {
@@ -244,6 +267,68 @@ export default function ProfilePage() {
     } catch (error) {
       console.error('視聴リスト取得エラー:', error);
     }
+  };
+
+  const fetchCategories = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('user_categories')
+      .select('id, name')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true });
+    if (error) {
+      console.error('カテゴリ取得エラー:', error);
+      return;
+    }
+    setCategories(data || []);
+  };
+
+  const fetchCategoryItems = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from('user_category_animes')
+      .select('id, anime_id, category_id, animes (id, title, image_url)')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('カテゴリ内アニメ取得エラー:', error);
+      return;
+    }
+    const normalized = (data || []).map((item) => {
+      const animeValue = Array.isArray(item.animes) ? item.animes[0] ?? null : item.animes ?? null;
+      return { ...item, animes: animeValue };
+    });
+    setCategoryItems(normalized);
+  };
+
+  const handleCreateCategory = async () => {
+    if (!user || !newCategoryName.trim()) return;
+    const { error } = await supabase
+      .from('user_categories')
+      .insert({ user_id: user.id, name: newCategoryName.trim() });
+    if (error) {
+      console.error('カテゴリ作成エラー:', error);
+      return;
+    }
+    setNewCategoryName('');
+    await fetchCategories();
+  };
+
+  const handleAddToCategory = async () => {
+    if (!user || !categoryTargetId || !categoryAnimeId) return;
+    const { error } = await supabase
+      .from('user_category_animes')
+      .insert({
+        user_id: user.id,
+        category_id: categoryTargetId,
+        anime_id: categoryAnimeId,
+      });
+    if (error) {
+      console.error('カテゴリ追加エラー:', error);
+      return;
+    }
+    setCategoryAnimeId('');
+    await fetchCategoryItems();
   };
 
   const fetchLikesReceived = async () => {
@@ -478,6 +563,109 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="card p-6 md:p-8 space-y-5">
+        <div className="flex items-center gap-2">
+          <Tag className="w-5 h-5 text-pink-600" />
+          <h2 className="text-2xl font-bold text-gray-900">カスタムカテゴリ</h2>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-gray-700">カテゴリを追加</label>
+            <div className="flex gap-2">
+              <input
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                className="input-field"
+                placeholder="例: 泣ける / 神作 / 作業用"
+              />
+              <button type="button" onClick={handleCreateCategory} className="btn-secondary">
+                追加
+              </button>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-gray-700">アニメをカテゴリに追加</label>
+            <div className="grid sm:grid-cols-2 gap-2">
+              <select
+                value={categoryTargetId}
+                onChange={(e) => setCategoryTargetId(Number(e.target.value))}
+                className="input-field"
+              >
+                <option value="">カテゴリを選択</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={categoryAnimeId}
+                onChange={(e) => setCategoryAnimeId(Number(e.target.value))}
+                className="input-field"
+              >
+                <option value="">アニメを選択</option>
+                {animes.map((anime) => (
+                  <option key={anime.id} value={anime.id}>
+                    {anime.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button type="button" onClick={handleAddToCategory} className="btn-primary">
+              追加する
+            </button>
+          </div>
+        </div>
+
+        {categories.length > 0 ? (
+          <div className="grid md:grid-cols-2 gap-6">
+            {categories.map((category) => {
+              const items = categoryItems.filter((item) => item.category_id === category.id);
+              return (
+                <div key={category.id} className="card p-5 space-y-3 bg-pink-50/50">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-gray-900">{category.name}</p>
+                    <span className="text-xs text-gray-500">{items.length}件</span>
+                  </div>
+                  {items.length > 0 ? (
+                    <div className="space-y-2">
+                      {items.slice(0, 6).map((item) => (
+                        <div key={item.id} className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex-shrink-0">
+                            {item.animes?.image_url ? (
+                              <img
+                                src={item.animes.image_url}
+                                alt={item.animes.title}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                                —
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-700 line-clamp-1">
+                            {item.animes?.title || 'タイトル未設定'}
+                          </p>
+                        </div>
+                      ))}
+                      {items.length > 6 && (
+                        <p className="text-xs text-gray-400">他 {items.length - 6} 件</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">まだ追加されていません</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">カテゴリがまだありません</p>
+        )}
       </div>
 
       {isEditing && (
