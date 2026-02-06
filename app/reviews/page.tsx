@@ -16,6 +16,7 @@ interface ReviewWithDetails {
   users: {
     username: string;
     display_name: string | null;
+    avatar_url: string | null;
   } | null;
   animes: {
     id: number;
@@ -44,7 +45,7 @@ function ReviewsContent() {
           content,
           has_spoiler,
           created_at,
-          users (username, display_name),
+          users (username, display_name, avatar_url),
           animes (id, title)
         `)
         .order('created_at', { ascending: false });
@@ -105,8 +106,16 @@ function ReviewsContent() {
               <div className="card p-6 hover:shadow-2xl transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold">
-                      {review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()}
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                      {review.users?.avatar_url ? (
+                        <img
+                          src={review.users.avatar_url}
+                          alt={review.users.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
+                      )}
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">

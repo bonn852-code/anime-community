@@ -17,6 +17,7 @@ interface ReviewWithUser {
   users: {
     username: string;
     display_name: string | null;
+    avatar_url: string | null;
   } | null;
 }
 
@@ -86,7 +87,7 @@ export default function AnimeDetailPage() {
           content,
           has_spoiler,
           created_at,
-          users (username, display_name)
+          users (username, display_name, avatar_url)
         `)
         .eq('anime_id', animeId)
         .order('created_at', { ascending: false })
@@ -403,9 +404,22 @@ export default function AnimeDetailPage() {
                 <Link key={review.id} href={`/reviews/${review.id}`}>
                   <div className="card p-5 h-full hover:shadow-2xl transition-shadow">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm text-gray-500">
-                        {review.users?.display_name || review.users?.username}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden">
+                          {review.users?.avatar_url ? (
+                            <img
+                              src={review.users.avatar_url}
+                              alt={review.users.username}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          {review.users?.display_name || review.users?.username}
+                        </p>
+                      </div>
                       {review.has_spoiler && (
                         <span className="badge bg-yellow-100 text-yellow-700">ネタバレ</span>
                       )}

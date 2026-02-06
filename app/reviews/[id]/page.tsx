@@ -18,6 +18,7 @@ interface ReviewDetail {
   users: {
     username: string;
     display_name: string | null;
+    avatar_url: string | null;
   } | null;
   animes: {
     id: number;
@@ -33,6 +34,7 @@ interface CommentWithUser {
   users: {
     username: string;
     display_name: string | null;
+    avatar_url: string | null;
   } | null;
 }
 
@@ -77,7 +79,7 @@ export default function ReviewDetailPage() {
           has_spoiler,
           created_at,
           user_id,
-          users (username, display_name),
+          users (username, display_name, avatar_url),
           animes (id, title)
         `)
         .eq('id', reviewId)
@@ -107,7 +109,7 @@ export default function ReviewDetailPage() {
         content,
         created_at,
         user_id,
-        users (username, display_name)
+        users (username, display_name, avatar_url)
       `)
       .eq('review_id', reviewId)
       .order('created_at', { ascending: true });
@@ -296,8 +298,16 @@ export default function ReviewDetailPage() {
       <div className="card p-6 md:p-8 space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold">
-              {review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()}
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+              {review.users?.avatar_url ? (
+                <img
+                  src={review.users.avatar_url}
+                  alt={review.users.username}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
+              )}
             </div>
             <div>
               <p className="font-semibold text-gray-900">
@@ -356,13 +366,26 @@ export default function ReviewDetailPage() {
             {comments.map((comment) => (
               <div key={comment.id} className="card p-5">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {comment.users?.display_name || comment.users?.username}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(comment.created_at).toLocaleString('ja-JP')}
-                    </p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                      {comment.users?.avatar_url ? (
+                        <img
+                          src={comment.users.avatar_url}
+                          alt={comment.users.username}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        comment.users?.display_name?.charAt(0) || comment.users?.username.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {comment.users?.display_name || comment.users?.username}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(comment.created_at).toLocaleString('ja-JP')}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
