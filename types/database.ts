@@ -58,3 +58,12 @@ export interface Notification {
   is_read: boolean;
   created_at: string;
 }
+
+export interface WatchlistItem {
+  id: number;
+  user_id: string;
+  anime_id: number;
+  status: 'plan' | 'watching' | 'completed' | 'paused';
+  created_at: string;
+  updated_at: string;
+}

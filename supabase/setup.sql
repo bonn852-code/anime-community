@@ -41,6 +41,17 @@ CREATE TABLE IF NOT EXISTS public.favorite_animes (
   UNIQUE(user_id, anime_id)
 );
 
+-- 視聴リスト
+CREATE TABLE IF NOT EXISTS public.watchlists (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  anime_id BIGINT REFERENCES public.animes(id) ON DELETE CASCADE,
+  status TEXT NOT NULL CHECK (status IN ('plan', 'watching', 'completed', 'paused')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, anime_id)
+);
+
 -- アニメ評価
 CREATE TABLE IF NOT EXISTS public.anime_ratings (
   id BIGSERIAL PRIMARY KEY,
@@ -158,6 +169,8 @@ CREATE INDEX IF NOT EXISTS idx_follows_follower ON public.follows(follower_id);
 CREATE INDEX IF NOT EXISTS idx_follows_following ON public.follows(following_id);
 CREATE INDEX IF NOT EXISTS idx_favorite_animes_user_id ON public.favorite_animes(user_id);
 CREATE INDEX IF NOT EXISTS idx_favorite_animes_display_order ON public.favorite_animes(user_id, display_order);
+CREATE INDEX IF NOT EXISTS idx_watchlists_user_id ON public.watchlists(user_id);
+CREATE INDEX IF NOT EXISTS idx_watchlists_anime_id ON public.watchlists(anime_id);
 CREATE INDEX IF NOT EXISTS idx_inquiries_created_at ON public.inquiries(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_admin_users_user_id ON public.admin_users(user_id);
 
@@ -168,6 +181,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_users_user_id ON public.admin_users(user_id
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.animes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.favorite_animes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.watchlists ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.anime_ratings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
@@ -197,6 +211,10 @@ CREATE POLICY "animes_insert_policy" ON public.animes FOR INSERT WITH CHECK (aut
 -- favorite_animes テーブルのポリシー
 CREATE POLICY "favorite_animes_select_policy" ON public.favorite_animes FOR SELECT USING (true);
 CREATE POLICY "favorite_animes_all_policy" ON public.favorite_animes FOR ALL USING (auth.uid() = user_id);
+
+-- watchlists テーブルのポリシー
+CREATE POLICY "watchlists_select_policy" ON public.watchlists FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "watchlists_all_policy" ON public.watchlists FOR ALL USING (auth.uid() = user_id);
 
 -- anime_ratings テーブルのポリシー
 CREATE POLICY "anime_ratings_select_policy" ON public.anime_ratings FOR SELECT USING (true);

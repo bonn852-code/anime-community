@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Settings, MessageCircle, Heart, Save, UploadCloud } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { maskNgWords } from '@/lib/ngWordFilter';
 import { useAuth } from '@/lib/AuthProvider';
 import type { User } from '@/types/database';
 
@@ -30,6 +31,22 @@ interface AnimeOption {
   image_url?: string | null;
 }
 
+interface WatchlistItem {
+  anime_id: number;
+  status: 'plan' | 'watching' | 'completed' | 'paused';
+  animes: {
+    id: number;
+    title: string;
+    image_url: string | null;
+  } | null;
+}
+
+interface Badge {
+  key: string;
+  label: string;
+  tone: string;
+}
+
 export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -38,6 +55,8 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [favorites, setFavorites] = useState<FavoriteAnime[]>([]);
+  const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
+  const [likesReceived, setLikesReceived] = useState(0);
   const [animes, setAnimes] = useState<AnimeOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -66,7 +85,15 @@ export default function ProfilePage() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      await Promise.all([fetchProfile(), fetchStats(), fetchReviews(), fetchFavorites(), fetchAnimes()]);
+      await Promise.all([
+        fetchProfile(),
+        fetchStats(),
+        fetchReviews(),
+        fetchFavorites(),
+        fetchWatchlist(),
+        fetchLikesReceived(),
+        fetchAnimes(),
+      ]);
     } finally {
       setLoading(false);
     }
@@ -200,6 +227,85 @@ export default function ProfilePage() {
     }
   };
 
+  const fetchWatchlist = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('watchlists')
+        .select('anime_id, status, animes (id, title, image_url)')
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      const normalized = (data || []).map((item) => {
+        const animeValue = Array.isArray(item.animes) ? item.animes[0] ?? null : item.animes ?? null;
+        return { ...item, animes: animeValue };
+      });
+      setWatchlist(normalized);
+    } catch (error) {
+      console.error('視聴リスト取得エラー:', error);
+    }
+  };
+
+  const fetchLikesReceived = async () => {
+    if (!user) return;
+    try {
+      const { count, error } = await supabase
+        .from('likes')
+        .select('id, reviews!inner(user_id)', { count: 'exact', head: true })
+        .eq('reviews.user_id', user.id);
+      if (error) throw error;
+      setLikesReceived(count || 0);
+    } catch (error) {
+      console.error('いいね獲得数取得エラー:', error);
+    }
+  };
+
+  const badges = useMemo<Badge[]>(() => {
+    const results: Badge[] = [];
+    const reviewCount = stats?.reviews_count ?? 0;
+    const likeCount = likesReceived;
+
+    const reviewTiers = [
+      { min: 10, label: 'レビュー 10', tone: 'bg-blue-100 text-blue-700' },
+      { min: 50, label: 'レビュー 50', tone: 'bg-purple-100 text-purple-700' },
+      { min: 100, label: 'レビュー 100', tone: 'bg-pink-100 text-pink-700' },
+      { min: 1000, label: 'レビュー 1000', tone: 'bg-yellow-100 text-yellow-700' },
+    ];
+    const likeTiers = [
+      { min: 10, label: 'いいね 10', tone: 'bg-green-100 text-green-700' },
+      { min: 50, label: 'いいね 50', tone: 'bg-emerald-100 text-emerald-700' },
+      { min: 100, label: 'いいね 100', tone: 'bg-orange-100 text-orange-700' },
+      { min: 1000, label: 'いいね 1000', tone: 'bg-red-100 text-red-700' },
+    ];
+
+    reviewTiers.forEach((tier) => {
+      if (reviewCount >= tier.min) {
+        results.push({ key: `review-${tier.min}`, label: tier.label, tone: tier.tone });
+      }
+    });
+
+    likeTiers.forEach((tier) => {
+      if (likeCount >= tier.min) {
+        results.push({ key: `like-${tier.min}`, label: tier.label, tone: tier.tone });
+      }
+    });
+
+    return results;
+  }, [stats?.reviews_count, likesReceived]);
+
+  const watchlistGroups = useMemo(() => {
+    const groups: Record<'plan' | 'watching' | 'completed' | 'paused', WatchlistItem[]> = {
+      plan: [],
+      watching: [],
+      completed: [],
+      paused: [],
+    };
+    watchlist.forEach((item) => {
+      groups[item.status].push(item);
+    });
+    return groups;
+  }, [watchlist]);
+
   const fetchAnimes = async () => {
     try {
       const { data, error } = await supabase
@@ -221,8 +327,8 @@ export default function ProfilePage() {
       const { error } = await supabase
         .from('users')
         .update({
-          display_name: formState.display_name.trim(),
-          bio: formState.bio.trim(),
+          display_name: maskNgWords(formState.display_name.trim()),
+          bio: maskNgWords(formState.bio.trim()),
           avatar_url: formState.avatar_url.trim(),
           avatar_position: formState.avatar_position,
         })
@@ -356,6 +462,16 @@ export default function ProfilePage() {
                 <span className="text-gray-600 ml-2">フォロー中</span>
               </div>
             </div>
+
+            {badges.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {badges.map((badge) => (
+                  <span key={badge.key} className={`badge ${badge.tone}`}>
+                    {badge.label}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {profile.bio && !isEditing && (
               <p className="text-gray-700">{profile.bio}</p>
@@ -491,6 +607,68 @@ export default function ProfilePage() {
           </button>
         </div>
       )}
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">視聴リスト</h2>
+          <span className="text-sm text-gray-500">
+            {watchlist.length}件
+          </span>
+        </div>
+        {watchlist.length > 0 ? (
+          <div className="grid md:grid-cols-2 gap-6">
+            {(['watching', 'plan', 'completed', 'paused'] as const).map((status) => {
+              const label =
+                status === 'watching'
+                  ? '見てる'
+                  : status === 'plan'
+                    ? '見たい'
+                    : status === 'completed'
+                      ? '見た'
+                      : '中断';
+              const items = watchlistGroups[status];
+              if (items.length === 0) return null;
+              return (
+                <div key={status} className="card p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-gray-900">{label}</p>
+                    <span className="text-xs text-gray-500">{items.length}件</span>
+                  </div>
+                  <div className="space-y-2">
+                    {items.slice(0, 6).map((item) => (
+                      <div key={item.anime_id} className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                          {item.animes?.image_url ? (
+                            <img
+                              src={item.animes.image_url}
+                              alt={item.animes.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                              —
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-700 line-clamp-1">
+                          {item.animes?.title || 'タイトル未設定'}
+                        </p>
+                      </div>
+                    ))}
+                    {items.length > 6 && (
+                      <p className="text-xs text-gray-400">他 {items.length - 6} 件</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="card p-8 text-center text-gray-600">
+            まだ視聴リストがありません
+          </div>
+        )}
+      </div>
 
       <div>
         <div className="flex items-center justify-between mb-4">

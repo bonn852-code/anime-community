@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Heart, MessageCircle, Send, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { maskNgWords } from '@/lib/ngWordFilter';
 import { useAuth } from '@/lib/AuthProvider';
 
 interface ReviewDetail {
@@ -192,7 +193,7 @@ export default function ReviewDetailPage() {
         .insert({
           review_id: reviewId,
           user_id: user.id,
-          content: commentContent.trim(),
+          content: maskNgWords(commentContent.trim()),
         });
 
       if (error) throw error;

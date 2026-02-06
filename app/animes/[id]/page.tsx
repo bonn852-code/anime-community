@@ -34,7 +34,9 @@ export default function AnimeDetailPage() {
   const [stats, setStats] = useState<AnimeStats | null>(null);
   const [reviews, setReviews] = useState<ReviewWithUser[]>([]);
   const [userRating, setUserRating] = useState<number | null>(null);
+  const [watchStatus, setWatchStatus] = useState<'plan' | 'watching' | 'completed' | 'paused' | null>(null);
   const [ratingSubmitting, setRatingSubmitting] = useState(false);
+  const [watchSubmitting, setWatchSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const lastTouchAtRef = useRef(0);
 
@@ -49,8 +51,10 @@ export default function AnimeDetailPage() {
   useEffect(() => {
     if (user && Number.isFinite(animeId)) {
       fetchUserRating();
+      fetchWatchStatus();
     } else {
       setUserRating(null);
+      setWatchStatus(null);
     }
   }, [user, animeId]);
 
@@ -115,6 +119,20 @@ export default function AnimeDetailPage() {
     }
   };
 
+  const fetchWatchStatus = async () => {
+    try {
+      const { data } = await supabase
+        .from('watchlists')
+        .select('status')
+        .eq('anime_id', animeId)
+        .eq('user_id', user!.id)
+        .maybeSingle();
+      setWatchStatus((data?.status as typeof watchStatus) ?? null);
+    } catch (error) {
+      console.error('視聴リスト取得エラー:', error);
+    }
+  };
+
   const handleRating = async (rating: number) => {
     if (!user) return;
     const normalized = Math.min(5, Math.max(1, Math.round(rating)));
@@ -139,6 +157,40 @@ export default function AnimeDetailPage() {
       await fetchUserRating();
     } finally {
       setRatingSubmitting(false);
+    }
+  };
+
+  const handleWatchStatusChange = async (value: string) => {
+    if (!user) return;
+    const nextStatus = value as typeof watchStatus;
+    setWatchSubmitting(true);
+    try {
+      if (!nextStatus) {
+        await supabase
+          .from('watchlists')
+          .delete()
+          .eq('anime_id', animeId)
+          .eq('user_id', user.id);
+        setWatchStatus(null);
+        return;
+      }
+      const { error } = await supabase
+        .from('watchlists')
+        .upsert(
+          {
+            user_id: user.id,
+            anime_id: animeId,
+            status: nextStatus,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id,anime_id' }
+        );
+      if (error) throw error;
+      setWatchStatus(nextStatus);
+    } catch (error) {
+      console.error('視聴リスト更新エラー:', error);
+    } finally {
+      setWatchSubmitting(false);
     }
   };
 
@@ -266,6 +318,32 @@ export default function AnimeDetailPage() {
               {!user && (
                 <p className="text-xs text-gray-500 mt-3">
                   評価するにはログインが必要です。
+                </p>
+              )}
+            </div>
+
+            <div className="card p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">視聴ステータス</p>
+                  <p className="text-xs text-gray-500">見たい/見てる/見た/中断 を管理</p>
+                </div>
+                <select
+                  value={watchStatus ?? ''}
+                  onChange={(e) => handleWatchStatusChange(e.target.value)}
+                  disabled={!user || watchSubmitting}
+                  className="input-field sm:w-48"
+                >
+                  <option value="">未設定</option>
+                  <option value="plan">見たい</option>
+                  <option value="watching">見てる</option>
+                  <option value="completed">見た</option>
+                  <option value="paused">中断</option>
+                </select>
+              </div>
+              {!user && (
+                <p className="text-xs text-gray-500 mt-3">
+                  ステータス管理にはログインが必要です。
                 </p>
               )}
             </div>

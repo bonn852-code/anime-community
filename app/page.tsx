@@ -1,16 +1,118 @@
  'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Sparkles, Users, MessageCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
 
 export default function HomePage() {
   const { user } = useAuth();
+  const [recommendedAnimes, setRecommendedAnimes] = useState<any[]>([]);
+  const [recommendedUsers, setRecommendedUsers] = useState<any[]>([]);
+  const [recommendLoading, setRecommendLoading] = useState(false);
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ||
     (user?.user_metadata?.username as string | undefined) ||
     user?.email?.split('@')[0] ||
     'ゲスト';
+
+  useEffect(() => {
+    if (user) {
+      fetchRecommendations();
+    }
+  }, [user]);
+
+  const fetchRecommendations = async () => {
+    if (!user) return;
+    setRecommendLoading(true);
+    try {
+      const { data: myRatings } = await supabase
+        .from('anime_ratings')
+        .select('anime_id')
+        .eq('user_id', user.id)
+        .limit(200);
+
+      const ratedIds = Array.from(new Set((myRatings || []).map((r) => r.anime_id)));
+      if (ratedIds.length === 0) {
+        const { data: latestAnimes } = await supabase
+          .from('animes')
+          .select('id, title, image_url')
+          .order('created_at', { ascending: false })
+          .limit(6);
+        setRecommendedAnimes(latestAnimes || []);
+        const { data: latestUsers } = await supabase
+          .from('users')
+          .select('id, username, display_name, avatar_url')
+          .order('created_at', { ascending: false })
+          .limit(6);
+        setRecommendedUsers(latestUsers || []);
+        return;
+      }
+
+      const { data: similarRatings } = await supabase
+        .from('anime_ratings')
+        .select('user_id, anime_id')
+        .in('anime_id', ratedIds)
+        .neq('user_id', user.id)
+        .limit(1000);
+
+      const overlapCounts = new Map<string, number>();
+      (similarRatings || []).forEach((row) => {
+        overlapCounts.set(row.user_id, (overlapCounts.get(row.user_id) || 0) + 1);
+      });
+      const topUserIds = Array.from(overlapCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6)
+        .map(([id]) => id);
+
+      if (topUserIds.length > 0) {
+        const { data: follows } = await supabase
+          .from('follows')
+          .select('following_id')
+          .eq('follower_id', user.id);
+        const followingSet = new Set((follows || []).map((row) => row.following_id));
+
+        const { data: userProfiles } = await supabase
+          .from('users')
+          .select('id, username, display_name, avatar_url')
+          .in('id', topUserIds);
+
+        const filteredUsers = (userProfiles || []).filter((u) => !followingSet.has(u.id));
+        setRecommendedUsers(filteredUsers);
+
+        const { data: candidateRatings } = await supabase
+          .from('anime_ratings')
+          .select('anime_id, rating')
+          .in('user_id', topUserIds)
+          .gte('rating', 4)
+          .limit(1000);
+
+        const candidateCounts = new Map<number, number>();
+        (candidateRatings || []).forEach((row) => {
+          if (ratedIds.includes(row.anime_id)) return;
+          candidateCounts.set(row.anime_id, (candidateCounts.get(row.anime_id) || 0) + 1);
+        });
+        const topAnimeIds = Array.from(candidateCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 6)
+          .map(([id]) => id);
+
+        if (topAnimeIds.length > 0) {
+          const { data: animeDetails } = await supabase
+            .from('animes')
+            .select('id, title, image_url')
+            .in('id', topAnimeIds);
+          const animeMap = new Map((animeDetails || []).map((a) => [a.id, a]));
+          setRecommendedAnimes(topAnimeIds.map((id) => animeMap.get(id)).filter(Boolean));
+        }
+      }
+    } catch (error) {
+      console.error('レコメンド取得エラー:', error);
+    } finally {
+      setRecommendLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-12">
@@ -93,6 +195,70 @@ export default function HomePage() {
           </p>
         </div>
       </section>
+
+      {user && (
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">あなたへのおすすめ</h2>
+              <p className="text-gray-600">評価傾向が近い人や作品をピックアップ</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="card p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">おすすめユーザー</h3>
+              {recommendLoading ? (
+                <p className="text-sm text-gray-500">読み込み中...</p>
+              ) : recommendedUsers.length > 0 ? (
+                <div className="space-y-3">
+                  {recommendedUsers.slice(0, 6).map((u) => (
+                    <Link key={u.id} href={`/users/${u.id}`} className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+                        {u.avatar_url ? (
+                          <img src={u.avatar_url} alt={u.username} className="w-full h-full object-cover" />
+                        ) : (
+                          u.display_name?.charAt(0) || u.username.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{u.display_name || u.username}</p>
+                        <p className="text-xs text-gray-500">@{u.username}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">おすすめできるユーザーがまだいません</p>
+              )}
+            </div>
+
+            <div className="card p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">おすすめアニメ</h3>
+              {recommendLoading ? (
+                <p className="text-sm text-gray-500">読み込み中...</p>
+              ) : recommendedAnimes.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {recommendedAnimes.slice(0, 6).map((anime) => (
+                    <Link key={anime.id} href={`/animes/${anime.id}`} className="flex items-center gap-3">
+                      <div className="w-12 h-16 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                        {anime.image_url ? (
+                          <img src={anime.image_url} alt={anime.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">—</div>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-700 line-clamp-2">{anime.title}</p>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">おすすめできる作品がまだいません</p>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {!user && (
         <section className="card p-8 md:p-12 text-center bg-gradient-to-r from-pink-50 to-purple-50">

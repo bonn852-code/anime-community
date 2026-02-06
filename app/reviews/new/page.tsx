@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Star, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { maskNgWords } from '@/lib/ngWordFilter';
 import { useAuth } from '@/lib/AuthProvider';
 interface AnimeOption {
   id: number;
@@ -84,8 +85,8 @@ function ReviewNewContent() {
         .insert({
           user_id: user.id,
           anime_id: animeId,
-          title: title.trim(),
-          content: content.trim(),
+          title: maskNgWords(title.trim()),
+          content: maskNgWords(content.trim()),
           has_spoiler: hasSpoiler,
         })
         .select('id')
