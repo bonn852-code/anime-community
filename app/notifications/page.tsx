@@ -130,7 +130,7 @@ export default function NotificationsPage() {
       </div>
 
       {notifications.length > 0 ? (
-        <div className="space-y-3">
+        <div className="space-y-5">
           {notifications.map((notification) => {
             const link =
               notification.type === 'dm'
