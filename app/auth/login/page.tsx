@@ -140,7 +140,7 @@ export default function LoginPage() {
             {oauthLoading ? 'Discordに接続中...' : 'Discordでログイン'}
           </button>
 
-          <div className="text-center">
+          <div className="text-center mt-6">
             <p className="text-gray-600">
               アカウントをお持ちでない方は{' '}
               <Link href="/auth/signup" className="text-pink-600 hover:text-pink-700 font-semibold">

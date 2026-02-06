@@ -143,26 +143,26 @@ export default function NotificationsPage() {
                 key={notification.id}
                 href={link}
               >
-              <div className={`card p-4 hover:shadow-lg transition-shadow ${
+              <div className={`card p-5 hover:shadow-lg transition-shadow ${
                 !notification.is_read ? 'bg-pink-50' : ''
               }`}>
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-5">
                   <div className="flex-shrink-0 mt-1">
                     {getNotificationIcon(notification.type)}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <p className="text-gray-900 font-medium">
+                    <p className="text-gray-900 font-medium leading-relaxed">
                       {getNotificationText(notification)}
                     </p>
                     
                     {notification.reviews && (
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-1">
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-1">
                         「{notification.reviews.title}」
                       </p>
                     )}
                     
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-gray-500 mt-3">
                       {new Date(notification.created_at).toLocaleString('ja-JP')}
                     </p>
                   </div>
