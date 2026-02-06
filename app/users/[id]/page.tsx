@@ -276,7 +276,7 @@ export default function UserProfilePage() {
   if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -304,7 +304,7 @@ export default function UserProfilePage() {
       <div className="card p-6 md:p-8">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-shrink-0">
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
+            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white text-4xl font-bold overflow-hidden">
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
@@ -360,7 +360,7 @@ export default function UserProfilePage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-            <MessageCircle className="w-6 h-6 mr-2 text-pink-600" />
+            <MessageCircle className="w-6 h-6 mr-2 text-sky-600" />
             最近の感想
           </h2>
         </div>
@@ -371,7 +371,7 @@ export default function UserProfilePage() {
               <Link key={review.id} href={`/reviews/${review.id}`}>
                 <div className="card p-6 h-full">
                   {review.animes && (
-                    <p className="text-sm text-pink-600 font-medium mb-2">
+                    <p className="text-sm text-sky-600 font-medium mb-2">
                       {review.animes.title}
                     </p>
                   )}
@@ -461,7 +461,7 @@ export default function UserProfilePage() {
             {categories.map((category) => {
               const items = categoryGroups.get(category.id) || [];
               return (
-                <div key={category.id} className="card p-5 space-y-3 bg-pink-50/50">
+                <div key={category.id} className="card p-5 space-y-3 bg-sky-50/50">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-gray-900">{category.name}</p>
                     <span className="text-xs text-gray-500">{items.length}件</span>
@@ -507,7 +507,7 @@ export default function UserProfilePage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-            <Heart className="w-6 h-6 mr-2 text-pink-600" />
+            <Heart className="w-6 h-6 mr-2 text-sky-600" />
             お気に入りアニメ
           </h2>
         </div>
@@ -516,7 +516,7 @@ export default function UserProfilePage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {favorites.map((favorite) => (
               <div key={favorite.anime_id} className="card overflow-hidden">
-                <div className="aspect-[3/4] bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200">
+                <div className="aspect-[3/4] bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100">
                   {favorite.animes?.image_url ? (
                     <img
                       src={favorite.animes.image_url}

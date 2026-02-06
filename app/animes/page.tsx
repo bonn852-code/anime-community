@@ -257,7 +257,7 @@ export default function AnimesPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -385,7 +385,7 @@ export default function AnimesPage() {
           {filteredAnimes.map((anime) => (
             <Link key={anime.id} href={`/animes/${anime.id}`}>
               <div className="card overflow-hidden group cursor-pointer hover:scale-105 transition-transform">
-                <div className="aspect-[3/4] bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200 relative overflow-hidden">
+                <div className="aspect-[3/4] bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 relative overflow-hidden">
                   {anime.image_url ? (
                     <img
                       src={anime.image_url}
@@ -401,7 +401,7 @@ export default function AnimesPage() {
                 </div>
 
                 <div className="p-4">
-                  <h3 className="font-bold text-gray-900 line-clamp-2 mb-1 group-hover:text-pink-600 transition-colors">
+                  <h3 className="font-bold text-gray-900 line-clamp-2 mb-1 group-hover:text-sky-600 transition-colors">
                     {anime.title}
                   </h3>
                   
@@ -414,7 +414,7 @@ export default function AnimesPage() {
                   {anime.genre && anime.genre.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {anime.genre.slice(0, 3).map((g, index) => (
-                        <span key={index} className="text-xs px-2 py-1 rounded-full bg-pink-100 text-pink-700">
+                        <span key={index} className="text-xs px-2 py-1 rounded-full bg-sky-100 text-sky-700">
                           {g}
                         </span>
                       ))}

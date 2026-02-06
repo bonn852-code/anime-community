@@ -81,13 +81,13 @@ export default function NotificationsPage() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'like':
-        return <Heart className="w-5 h-5 text-pink-500" fill="currentColor" />;
+        return <Heart className="w-5 h-5 text-sky-500" fill="currentColor" />;
       case 'comment':
         return <MessageCircle className="w-5 h-5 text-blue-500" />;
       case 'follow':
         return <User className="w-5 h-5 text-purple-500" />;
       case 'dm':
-        return <MessageCircle className="w-5 h-5 text-pink-500" />;
+        return <MessageCircle className="w-5 h-5 text-sky-500" />;
       default:
         return <Bell className="w-5 h-5 text-gray-500" />;
     }
@@ -113,7 +113,7 @@ export default function NotificationsPage() {
   if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -144,7 +144,7 @@ export default function NotificationsPage() {
                 href={link}
               >
               <div className={`card p-5 hover:shadow-lg transition-shadow ${
-                !notification.is_read ? 'bg-pink-50' : ''
+                !notification.is_read ? 'bg-sky-50' : ''
               }`}>
                 <div className="flex items-start gap-5">
                   <div className="flex-shrink-0 mt-1">

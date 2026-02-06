@@ -135,7 +135,7 @@ export default function UsersPage() {
   if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -167,7 +167,7 @@ export default function UsersPage() {
             return (
               <div key={profile.id} className="card p-6 flex items-center justify-between gap-4">
                 <Link href={`/users/${profile.id}`} className="flex items-center gap-4 min-w-0">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
                     {profile.avatar_url ? (
                       <img
                         src={profile.avatar_url}
@@ -218,11 +218,11 @@ export default function UsersPage() {
       )}
 
       <div className="text-sm text-gray-500">
-        <Link href="/reviews" className="text-pink-600 hover:text-pink-700">
+        <Link href="/reviews" className="text-sky-600 hover:text-sky-700">
           感想一覧を見る
         </Link>
         <span className="mx-2">|</span>
-        <Link href="/profile" className="text-pink-600 hover:text-pink-700">
+        <Link href="/profile" className="text-sky-600 hover:text-sky-700">
           自分のプロフィールへ
         </Link>
       </div>

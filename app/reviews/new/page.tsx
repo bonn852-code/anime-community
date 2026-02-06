@@ -122,7 +122,7 @@ function ReviewNewContent() {
   if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -185,7 +185,7 @@ function ReviewNewContent() {
           />
         </div>
 
-        <div className="card p-4 bg-pink-50/60">
+        <div className="card p-4 bg-sky-50/60">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-gray-900">評価 (任意)</p>
@@ -199,8 +199,8 @@ function ReviewNewContent() {
                   onClick={() => setRating(value)}
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border touch-manipulation ${
                     rating && value <= rating
-                      ? 'bg-pink-500 border-pink-500 text-white'
-                      : 'bg-white border-gray-200 text-gray-400 hover:text-pink-500'
+                      ? 'bg-sky-500 border-sky-500 text-white'
+                      : 'bg-white border-gray-200 text-gray-400 hover:text-sky-500'
                   }`}
                   title={`${value}点`}
                 >
@@ -216,7 +216,7 @@ function ReviewNewContent() {
             type="checkbox"
             checked={hasSpoiler}
             onChange={(e) => setHasSpoiler(e.target.checked)}
-            className="w-4 h-4 text-pink-500 focus:ring-pink-400 border-gray-300 rounded"
+            className="w-4 h-4 text-sky-500 focus:ring-sky-400 border-gray-300 rounded"
           />
           ネタバレを含みます
         </label>
@@ -243,7 +243,7 @@ export default function ReviewNewPage() {
     <Suspense
       fallback={(
         <div className="flex justify-center items-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
         </div>
       )}
     >

@@ -208,7 +208,7 @@ export default function AnimeDetailPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -225,7 +225,7 @@ export default function AnimeDetailPage() {
     <div className="space-y-10">
       <div className="card p-6 md:p-8">
         <div className="grid md:grid-cols-[240px_1fr] gap-6">
-          <div className="rounded-2xl overflow-hidden shadow-md bg-gradient-to-br from-pink-200 via-purple-200 to-blue-200">
+          <div className="rounded-2xl overflow-hidden shadow-md bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100">
             {anime.image_url ? (
               <img
                 src={anime.image_url}
@@ -251,7 +251,7 @@ export default function AnimeDetailPage() {
 
             <div className="flex flex-wrap gap-2">
               {anime.genre?.map((g, index) => (
-                <span key={index} className="text-xs px-3 py-1 rounded-full bg-pink-100 text-pink-700">
+                <span key={index} className="text-xs px-3 py-1 rounded-full bg-sky-100 text-sky-700">
                   {g}
                 </span>
               ))}
@@ -273,7 +273,7 @@ export default function AnimeDetailPage() {
                   <button
                     type="button"
                     onClick={() => setShowFullDescription((prev) => !prev)}
-                    className="text-sm text-pink-600 hover:text-pink-700 font-semibold"
+                    className="text-sm text-sky-600 hover:text-sky-700 font-semibold"
                   >
                     {showFullDescription ? '折りたたむ' : 'もっと見る'}
                   </button>
@@ -296,7 +296,7 @@ export default function AnimeDetailPage() {
               </div>
               <div className="card p-4 text-center">
                 <p className="text-xs text-gray-500 mb-1">ハッシュタグ</p>
-                <p className="text-lg font-semibold text-pink-600">{hashtag}</p>
+                <p className="text-lg font-semibold text-sky-600">{hashtag}</p>
               </div>
             </div>
 
@@ -321,8 +321,8 @@ export default function AnimeDetailPage() {
                       disabled={!user || ratingSubmitting}
                       className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors border touch-manipulation ${
                         displayRating && value <= displayRating
-                          ? 'bg-pink-500 border-pink-500 text-white'
-                          : 'bg-white border-gray-200 text-gray-400 hover:text-pink-500'
+                          ? 'bg-sky-500 border-sky-500 text-white'
+                          : 'bg-white border-gray-200 text-gray-400 hover:text-sky-500'
                       }`}
                       title={`${value}点`}
                     >
@@ -387,11 +387,11 @@ export default function AnimeDetailPage() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <MessageCircle className="w-6 h-6 mr-2 text-pink-600" />
+              <MessageCircle className="w-6 h-6 mr-2 text-sky-600" />
               みんなの感想
             </h2>
             <div className="flex justify-end">
-              <Link href="/reviews" className="text-sm font-semibold text-pink-600 hover:text-pink-700">
+              <Link href="/reviews" className="text-sm font-semibold text-sky-600 hover:text-sky-700">
                 もっと見る
               </Link>
             </div>
@@ -433,7 +433,7 @@ export default function AnimeDetailPage() {
         <div className="space-y-6">
           <div className="card p-6">
             <div className="flex items-start gap-3">
-              <Hash className="w-5 h-5 text-pink-500 mt-1" />
+              <Hash className="w-5 h-5 text-sky-500 mt-1" />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-gray-900">この作品のハッシュタグ</p>
                 <p className="text-xs text-gray-500">感想投稿時に使うと探しやすくなります。</p>
@@ -441,7 +441,7 @@ export default function AnimeDetailPage() {
                   <input
                     value={hashtag}
                     readOnly
-                    className="input-field text-pink-600 font-semibold"
+                    className="input-field text-sky-600 font-semibold"
                   />
                 </div>
               </div>

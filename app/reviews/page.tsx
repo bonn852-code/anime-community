@@ -73,7 +73,7 @@ function ReviewsContent() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -105,7 +105,7 @@ function ReviewsContent() {
               <div className="card p-6 hover:shadow-2xl transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold">
                       {review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -125,7 +125,7 @@ function ReviewsContent() {
                 </div>
 
                 {review.animes && (
-                  <p className="text-sm text-pink-600 font-medium mb-2">
+                  <p className="text-sm text-sky-600 font-medium mb-2">
                     {review.animes.title}
                   </p>
                 )}
@@ -164,7 +164,7 @@ export default function ReviewsPage() {
     <Suspense
       fallback={(
         <div className="flex justify-center items-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
         </div>
       )}
     >

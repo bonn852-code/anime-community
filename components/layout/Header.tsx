@@ -86,7 +86,7 @@ export default function Header() {
               href="/"
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 isActive("/")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -96,7 +96,7 @@ export default function Header() {
               href="/animes"
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 isActive("/animes")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -106,7 +106,7 @@ export default function Header() {
               href="/reviews"
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 isActive("/reviews")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -116,7 +116,7 @@ export default function Header() {
               href="/users"
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 isActive("/users")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -126,7 +126,7 @@ export default function Header() {
               href="/contact"
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 isActive("/contact")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -136,7 +136,7 @@ export default function Header() {
               href="/messages"
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 isActive("/messages")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
@@ -147,7 +147,7 @@ export default function Header() {
                 href="/admin"
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   isActive("/admin")
-                    ? "bg-pink-100 text-pink-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
@@ -165,7 +165,7 @@ export default function Header() {
                 >
                   <Bell className="w-5 h-5 text-gray-600" />
                   {showUnreadBadge && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-sky-500"></span>
                   )}
                 </Link>
 
@@ -209,7 +209,7 @@ export default function Header() {
               href="/"
               className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                 isActive("/")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 bg-gray-100"
               }`}
             >
@@ -220,7 +220,7 @@ export default function Header() {
               href="/animes"
               className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                 isActive("/animes")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 bg-gray-100"
               }`}
             >
@@ -231,7 +231,7 @@ export default function Header() {
               href="/reviews"
               className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                 isActive("/reviews")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 bg-gray-100"
               }`}
             >
@@ -242,7 +242,7 @@ export default function Header() {
               href="/users"
               className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                 isActive("/users")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 bg-gray-100"
               }`}
             >
@@ -253,7 +253,7 @@ export default function Header() {
               href="/messages"
               className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                 isActive("/messages")
-                  ? "bg-pink-100 text-pink-700"
+                  ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 bg-gray-100"
               }`}
             >
@@ -265,7 +265,7 @@ export default function Header() {
                 href="/admin"
                 className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                   isActive("/admin")
-                    ? "bg-pink-100 text-pink-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-700 bg-gray-100"
                 }`}
               >
@@ -278,21 +278,21 @@ export default function Header() {
                   href="/notifications"
                   className={`relative flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                     isActive("/notifications")
-                      ? "bg-pink-100 text-pink-700"
+                      ? "bg-sky-100 text-sky-700"
                       : "text-gray-700 bg-gray-100"
                   }`}
                 >
                   <Bell className="w-4 h-4" />
                   通知
                   {showUnreadBadge && (
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-pink-500"></span>
+                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-sky-500"></span>
                   )}
                 </Link>
                 <Link
                   href="/profile"
                   className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                     isActive("/profile")
-                      ? "bg-pink-100 text-pink-700"
+                      ? "bg-sky-100 text-sky-700"
                       : "text-gray-700 bg-gray-100"
                   }`}
                 >
@@ -305,7 +305,7 @@ export default function Header() {
                 href="/auth/login"
                 className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                   isActive("/auth/login")
-                    ? "bg-pink-100 text-pink-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-700 bg-gray-100"
                 }`}
               >
@@ -322,7 +322,7 @@ export default function Header() {
                 href="/"
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   isActive("/")
-                    ? "bg-pink-100 text-pink-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -333,7 +333,7 @@ export default function Header() {
                 href="/animes"
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   isActive("/animes")
-                    ? "bg-pink-100 text-pink-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -344,7 +344,7 @@ export default function Header() {
                 href="/reviews"
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   isActive("/reviews")
-                    ? "bg-pink-100 text-pink-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -355,7 +355,7 @@ export default function Header() {
                 href="/users"
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   isActive("/users")
-                    ? "bg-pink-100 text-pink-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -366,7 +366,7 @@ export default function Header() {
                 href="/contact"
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   isActive("/contact")
-                    ? "bg-pink-100 text-pink-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -377,7 +377,7 @@ export default function Header() {
                 href="/messages"
                 className={`px-4 py-3 rounded-lg font-medium transition-all ${
                   isActive("/messages")
-                    ? "bg-pink-100 text-pink-700"
+                    ? "bg-sky-100 text-sky-700"
                     : "text-gray-700 hover:bg-gray-100"
                 }`}
                 onClick={() => setIsMenuOpen(false)}
@@ -389,7 +389,7 @@ export default function Header() {
                   href="/admin"
                   className={`px-4 py-3 rounded-lg font-medium transition-all ${
                     isActive("/admin")
-                      ? "bg-pink-100 text-pink-700"
+                      ? "bg-sky-100 text-sky-700"
                       : "text-gray-700 hover:bg-gray-100"
                   }`}
                   onClick={() => setIsMenuOpen(false)}

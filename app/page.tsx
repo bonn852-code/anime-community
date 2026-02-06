@@ -87,12 +87,12 @@ export default function HomePage() {
   return (
     <div className="space-y-12">
       <section className="text-center py-12 px-4">
-        <div className="inline-flex items-center space-x-2 bg-pink-100 text-pink-700 px-4 py-2 rounded-full mb-6 animate-fade-in">
+        <div className="inline-flex items-center space-x-2 bg-sky-100 text-sky-700 px-4 py-2 rounded-full mb-6 animate-fade-in">
           <Sparkles className="w-4 h-4" />
           <span className="text-sm font-semibold">アニメ好きのためのコミュニティ</span>
         </div>
         
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 bg-clip-text text-transparent animate-slide-up">
+        <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-sky-600 via-blue-600 to-purple-600 bg-clip-text text-transparent animate-slide-up">
           好きなアニメで<br />繋がろう
         </h1>
         
@@ -114,7 +114,7 @@ export default function HomePage() {
           <div className="animate-slide-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 text-gray-700 text-sm font-semibold shadow-sm">
               おかえりなさい
-              <span className="text-pink-600 font-bold">{displayName}</span>
+              <span className="text-sky-600 font-bold">{displayName}</span>
             </div>
             <div className="mt-6 grid sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
               <Link href="/animes" className="card p-4 text-left hover:shadow-lg transition-shadow">
@@ -136,7 +136,7 @@ export default function HomePage() {
 
       <section className="grid md:grid-cols-3 gap-6">
         <div className="card p-6 hover:scale-105 transition-transform">
-          <div className="bg-gradient-to-br from-pink-500 to-rose-500 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+          <div className="bg-gradient-to-br from-sky-500 to-blue-600 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
             <MessageCircle className="w-6 h-6 text-white" />
           </div>
           <h3 className="text-xl font-bold mb-2 text-gray-900">感想を共有</h3>
@@ -156,7 +156,7 @@ export default function HomePage() {
         </div>
 
         <div className="card p-6 hover:scale-105 transition-transform">
-          <div className="bg-gradient-to-br from-purple-500 to-pink-500 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
+          <div className="bg-gradient-to-br from-blue-500 to-sky-500 w-12 h-12 rounded-xl flex items-center justify-center mb-4">
             <Sparkles className="w-6 h-6 text-white" />
           </div>
           <h3 className="text-xl font-bold mb-2 text-gray-900">新作を発見</h3>
@@ -184,7 +184,7 @@ export default function HomePage() {
                 <div className="space-y-3">
                   {recommendedUsers.slice(0, 6).map((u) => (
                     <Link key={u.id} href={`/users/${u.id}`} className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
                         {u.avatar_url ? (
                           <img src={u.avatar_url} alt={u.username} className="w-full h-full object-cover" />
                         ) : (
@@ -231,7 +231,7 @@ export default function HomePage() {
       )}
 
       {!user && (
-        <section className="card p-8 md:p-12 text-center bg-gradient-to-r from-pink-50 to-purple-50">
+        <section className="card p-8 md:p-12 text-center bg-gradient-to-r from-sky-50 to-indigo-50">
           <h2 className="text-2xl md:text-3xl font-bold mb-4 text-gray-900">
             今すぐ参加して、アニメの世界を広げよう
           </h2>

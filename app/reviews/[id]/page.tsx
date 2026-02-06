@@ -268,7 +268,7 @@ export default function ReviewDetailPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -288,7 +288,7 @@ export default function ReviewDetailPage() {
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </Link>
         <div>
-          <p className="text-sm text-pink-600 font-semibold">{review.animes?.title}</p>
+          <p className="text-sm text-sky-600 font-semibold">{review.animes?.title}</p>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900">{review.title}</h1>
         </div>
       </div>
@@ -296,7 +296,7 @@ export default function ReviewDetailPage() {
       <div className="card p-6 md:p-8 space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold">
               {review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()}
             </div>
             <div>
@@ -334,7 +334,7 @@ export default function ReviewDetailPage() {
             type="button"
             onClick={handleToggleLike}
             className={`px-4 py-2 rounded-full flex items-center gap-2 border transition-colors ${
-              liked ? 'border-pink-500 bg-pink-50 text-pink-600' : 'border-gray-200 text-gray-600'
+              liked ? 'border-sky-500 bg-sky-50 text-sky-600' : 'border-gray-200 text-gray-600'
             }`}
             disabled={!user || submitting}
           >
@@ -368,7 +368,7 @@ export default function ReviewDetailPage() {
                     <button
                       type="button"
                       onClick={() => handleReply(comment)}
-                      className="text-xs font-semibold text-pink-600 hover:text-pink-700"
+                      className="text-xs font-semibold text-sky-600 hover:text-sky-700"
                     >
                       返信
                     </button>

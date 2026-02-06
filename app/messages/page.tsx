@@ -158,7 +158,7 @@ export default function MessagesPage() {
   if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -182,7 +182,7 @@ export default function MessagesPage() {
             <Link key={conv.user.id} href={`/messages/${conv.user.id}`}>
               <div className="card p-5 flex items-center justify-between gap-4 hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
                     {conv.user.avatar_url ? (
                       <img src={conv.user.avatar_url} alt={conv.user.username} className="w-full h-full object-cover" />
                     ) : (
@@ -199,7 +199,7 @@ export default function MessagesPage() {
                   </div>
                 </div>
                 {conv.unreadCount > 0 && (
-                  <span className="text-xs font-semibold bg-pink-100 text-pink-700 rounded-full px-2 py-1">
+                  <span className="text-xs font-semibold bg-sky-100 text-sky-700 rounded-full px-2 py-1">
                     {conv.unreadCount}
                   </span>
                 )}
@@ -212,7 +212,7 @@ export default function MessagesPage() {
       )}
 
       <div className="text-sm text-gray-500">
-        <Link href="/users" className="text-pink-600 hover:text-pink-700">
+        <Link href="/users" className="text-sky-600 hover:text-sky-700">
           ユーザー検索へ
         </Link>
       </div>

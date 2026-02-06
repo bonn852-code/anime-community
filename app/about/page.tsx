@@ -1,13 +1,13 @@
 export default function AboutPage() {
   return (
     <div className="space-y-10">
-      <div className="card p-8 md:p-10 bg-gradient-to-br from-pink-50 via-white to-purple-50">
+      <div className="card p-8 md:p-10 bg-gradient-to-br from-sky-50 via-white to-indigo-50">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">このサイトについて</h1>
         <p className="text-gray-600 text-lg">
           AniWorldはアニメの感想を共有し、同じ作品が好きな仲間と繋がれるコミュニティです。
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
-          <span className="badge bg-pink-100 text-pink-700">感想投稿</span>
+          <span className="badge bg-sky-100 text-sky-700">感想投稿</span>
           <span className="badge bg-blue-100 text-blue-700">評価・検索</span>
           <span className="badge bg-purple-100 text-purple-700">フォロー</span>
           <span className="badge bg-emerald-100 text-emerald-700">DM</span>

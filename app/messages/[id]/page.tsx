@@ -354,7 +354,7 @@ export default function MessageThreadPage() {
   if (authLoading || (loading && initialLoading)) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600"></div>
       </div>
     );
   }
@@ -424,7 +424,7 @@ export default function MessageThreadPage() {
 
       <div className="card p-0 overflow-hidden flex-1 flex flex-col min-h-0 relative">
         <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-white">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center text-white font-semibold overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
             {otherUser.avatar_url ? (
               <img src={otherUser.avatar_url} alt={otherUser.username} className="w-full h-full object-cover" />
             ) : (
@@ -441,7 +441,7 @@ export default function MessageThreadPage() {
           ref={listRef}
           onScroll={handleScroll}
           onWheel={handleWheel}
-          className="flex-1 overflow-y-auto bg-gradient-to-b from-pink-50/60 via-white to-white px-4 py-5 space-y-4 pb-28"
+          className="flex-1 overflow-y-auto bg-gradient-to-b from-sky-50/60 via-white to-white px-4 py-5 space-y-4 pb-28"
         >
           {hasMore && (
             <div className="flex justify-center">
@@ -457,7 +457,7 @@ export default function MessageThreadPage() {
                     <div
                       className={`rounded-2xl px-4 py-2 text-sm shadow-sm ${
                         isMine
-                          ? 'bg-pink-500 text-white rounded-br-md'
+                          ? 'bg-sky-500 text-white rounded-br-md'
                           : 'bg-white text-gray-800 border border-gray-100 rounded-bl-md'
                       }`}
                     >
@@ -487,7 +487,7 @@ export default function MessageThreadPage() {
               manualHoldRef.current = false;
               scrollToBottom();
             }}
-            className="absolute right-5 bottom-24 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-pink-600"
+            className="absolute right-5 bottom-24 w-10 h-10 rounded-full bg-white shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-sky-600"
             aria-label="最新へ移動"
           >
             ↓

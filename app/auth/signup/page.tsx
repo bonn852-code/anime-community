@@ -80,7 +80,7 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         <div ref={cardRef} className="card p-8 animate-fade-in">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 mb-4">
               <UserPlus className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -218,7 +218,7 @@ export default function SignupPage() {
           <div className="text-center">
             <p className="text-gray-600">
               すでにアカウントをお持ちの方は{' '}
-              <Link href="/auth/login" className="text-pink-600 hover:text-pink-700 font-semibold">
+              <Link href="/auth/login" className="text-sky-600 hover:text-sky-700 font-semibold">
                 ログイン
               </Link>
             </p>

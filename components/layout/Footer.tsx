@@ -21,7 +21,7 @@ export default function Footer() {
                 alt="AniWorld"
                 className="h-14 w-auto sm:h-16"
               />
-              <span className="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-gradient-to-r from-sky-600 to-blue-700 bg-clip-text text-transparent">
                 AniWorld
               </span>
             </div>
@@ -35,17 +35,17 @@ export default function Footer() {
             <h3 className="font-semibold text-gray-900 mb-4">サイト</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/" className="text-gray-600 hover:text-pink-600 transition-colors">
+                <Link href="/" className="text-gray-600 hover:text-sky-600 transition-colors">
                   ホーム
                 </Link>
               </li>
               <li>
-                <Link href="/animes" className="text-gray-600 hover:text-pink-600 transition-colors">
+                <Link href="/animes" className="text-gray-600 hover:text-sky-600 transition-colors">
                   アニメ一覧
                 </Link>
               </li>
               <li>
-                <Link href="/reviews" className="text-gray-600 hover:text-pink-600 transition-colors">
+                <Link href="/reviews" className="text-gray-600 hover:text-sky-600 transition-colors">
                   感想一覧
                 </Link>
               </li>
@@ -56,12 +56,12 @@ export default function Footer() {
             <h3 className="font-semibold text-gray-900 mb-4">サポート</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/about" className="text-gray-600 hover:text-pink-600 transition-colors">
+                <Link href="/about" className="text-gray-600 hover:text-sky-600 transition-colors">
                   このサイトについて
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-600 hover:text-pink-600 transition-colors">
+                <Link href="/contact" className="text-gray-600 hover:text-sky-600 transition-colors">
                   お問い合わせ
                 </Link>
               </li>

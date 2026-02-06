@@ -57,7 +57,7 @@ export default function ContactPage() {
 
       <form onSubmit={handleSubmit} className="card p-6 md:p-8 space-y-6">
         {status && (
-          <div className="card p-4 text-sm text-gray-700 bg-pink-50/60">{status}</div>
+          <div className="card p-4 text-sm text-gray-700 bg-sky-50/60">{status}</div>
         )}
 
         <div>
