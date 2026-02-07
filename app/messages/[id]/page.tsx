@@ -437,7 +437,7 @@ export default function MessageThreadPage() {
   const showJumpToLatest = !isAtBottom || manualHoldRef.current;
 
   return (
-    <div className="-my-8 h-[calc(100svh-64px)] flex flex-col gap-4 overflow-hidden">
+    <div className="-my-4 h-[calc(100svh-210px)] md:h-[calc(100svh-220px)] flex flex-col gap-3 overflow-hidden">
       <div className="flex items-center gap-3">
         <Link href="/messages" className="p-2 rounded-full bg-white shadow hover:shadow-md">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
@@ -467,7 +467,7 @@ export default function MessageThreadPage() {
           ref={listRef}
           onScroll={handleScroll}
           onWheel={handleWheel}
-          className="flex-1 overflow-y-auto bg-gradient-to-b from-sky-50/60 via-white to-white px-4 py-5 space-y-4 pb-28"
+          className="flex-1 overflow-y-auto bg-gradient-to-b from-sky-50/60 via-white to-white px-4 py-4 space-y-4 pb-20"
         >
           {hasMore && (
             <div className="flex justify-center">
