@@ -8,9 +8,11 @@ import type { Anime } from '@/types/database';
 import { useAuth } from '@/lib/AuthProvider';
 
 export default function AnimesPage() {
+  const ITEMS_PER_PAGE = 16;
   const { user } = useAuth();
   const [animes, setAnimes] = useState<Anime[]>([]);
   const [filteredAnimes, setFilteredAnimes] = useState<Anime[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [genreFilter, setGenreFilter] = useState('');
   const [seasonFilter, setSeasonFilter] = useState('');
@@ -45,6 +47,13 @@ export default function AnimesPage() {
   useEffect(() => {
     filterAnimes();
   }, [searchQuery, animes, genreFilter, seasonFilter]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredAnimes.length / ITEMS_PER_PAGE));
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [filteredAnimes.length, currentPage]);
 
   const fetchAnimes = async () => {
     try {
@@ -254,6 +263,12 @@ export default function AnimesPage() {
     setFilteredAnimes(filtered);
   };
 
+  const totalPages = Math.max(1, Math.ceil(filteredAnimes.length / ITEMS_PER_PAGE));
+  const paginatedAnimes = filteredAnimes.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -336,14 +351,20 @@ export default function AnimesPage() {
             type="text"
             placeholder="タイトル検索 または #作品名/ジャンル..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setCurrentPage(1);
+              setSearchQuery(e.target.value);
+            }}
             className="input-field pl-10"
           />
         </div>
         <div className="mt-4 grid sm:grid-cols-2 gap-3">
           <select
             value={genreFilter}
-            onChange={(e) => setGenreFilter(e.target.value)}
+            onChange={(e) => {
+              setCurrentPage(1);
+              setGenreFilter(e.target.value);
+            }}
             className="input-field"
           >
             <option value="">ジャンルで絞り込み</option>
@@ -359,7 +380,10 @@ export default function AnimesPage() {
           </select>
           <select
             value={seasonFilter}
-            onChange={(e) => setSeasonFilter(e.target.value)}
+            onChange={(e) => {
+              setCurrentPage(1);
+              setSeasonFilter(e.target.value);
+            }}
             className="input-field"
           >
             <option value="">シーズンで絞り込み</option>
@@ -381,49 +405,86 @@ export default function AnimesPage() {
       </div>
 
       {filteredAnimes.length > 0 ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredAnimes.map((anime) => (
-            <Link key={anime.id} href={`/animes/${anime.id}`}>
-              <div className="card overflow-hidden group cursor-pointer hover:scale-105 transition-transform">
-                <div className="aspect-[3/4] bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 relative overflow-hidden">
-                  {anime.image_url ? (
-                    <img
-                      src={anime.image_url}
-                      alt={anime.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white text-4xl font-bold">
-                      {anime.title.charAt(0)}
-                    </div>
-                  )}
-                </div>
+        <div className="space-y-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {paginatedAnimes.map((anime) => (
+              <Link key={anime.id} href={`/animes/${anime.id}`}>
+                <div className="card overflow-hidden group cursor-pointer hover:scale-105 transition-transform">
+                  <div className="aspect-[3/4] bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100 relative overflow-hidden">
+                    {anime.image_url ? (
+                      <img
+                        src={anime.image_url}
+                        alt={anime.title}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white text-4xl font-bold">
+                        {anime.title.charAt(0)}
+                      </div>
+                    )}
+                  </div>
 
-                <div className="p-4">
-                  <h3 className="font-bold text-gray-900 line-clamp-2 mb-1 group-hover:text-sky-600 transition-colors">
-                    {anime.title}
-                  </h3>
-                  
-                  {anime.title_en && (
-                    <p className="text-xs text-gray-500 line-clamp-1 mb-2">
-                      {anime.title_en}
-                    </p>
-                  )}
+                  <div className="p-4">
+                    <h3 className="font-bold text-gray-900 line-clamp-2 mb-1 group-hover:text-sky-600 transition-colors">
+                      {anime.title}
+                    </h3>
 
-                  {anime.genre && anime.genre.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {anime.genre.slice(0, 3).map((g, index) => (
-                        <span key={index} className="text-xs px-2 py-1 rounded-full bg-sky-100 text-sky-700">
-                          {g}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                    {anime.title_en && (
+                      <p className="text-xs text-gray-500 line-clamp-1 mb-2">
+                        {anime.title_en}
+                      </p>
+                    )}
+
+                    {anime.genre && anime.genre.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {anime.genre.slice(0, 3).map((g, index) => (
+                          <span key={index} className="text-xs px-2 py-1 rounded-full bg-sky-100 text-sky-700">
+                            {g}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                前へ
+              </button>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-2 rounded-lg text-sm ${
+                    page === currentPage
+                      ? 'bg-sky-600 text-white'
+                      : 'border border-sky-200 text-sky-700 hover:bg-sky-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                次へ
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="card p-12 text-center">
