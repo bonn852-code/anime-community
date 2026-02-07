@@ -114,6 +114,7 @@ export default function ProfilePage() {
   const [reviewPage, setReviewPage] = useState(1);
   const [avatarPositionPicker, setAvatarPositionPicker] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
   const avatarAdjustingRef = useRef(false);
+  const avatarPickerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -184,6 +185,7 @@ export default function ProfilePage() {
           avatar_url: refreshed.avatar_url || '',
           avatar_position: refreshed.avatar_position || 'center',
         });
+        setAvatarPositionPicker(parseAvatarPosition(refreshed.avatar_position || 'center'));
         return;
       }
 
@@ -194,6 +196,7 @@ export default function ProfilePage() {
         avatar_url: data.avatar_url || '',
         avatar_position: data.avatar_position || 'center',
       });
+      setAvatarPositionPicker(parseAvatarPosition(data.avatar_position || 'center'));
     } catch (error) {
       console.error('プロフィール取得エラー:', error);
     }
@@ -421,21 +424,16 @@ export default function ProfilePage() {
     }
   }, [reviews.length, reviewPage]);
 
-  useEffect(() => {
-    setAvatarPositionPicker(parseAvatarPosition(formState.avatar_position));
-  }, [formState.avatar_position]);
-
   const totalReviewPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
   const visibleReviews = reviews.slice((reviewPage - 1) * REVIEWS_PER_PAGE, reviewPage * REVIEWS_PER_PAGE);
 
   const updateAvatarPositionFromClientPoint = (clientX: number, clientY: number) => {
-    const target = document.getElementById('avatar-position-picker');
+    const target = avatarPickerRef.current;
     if (!target) return;
     const rect = target.getBoundingClientRect();
     const x = clamp(((clientX - rect.left) / rect.width) * 100, 0, 100);
     const y = clamp(((clientY - rect.top) / rect.height) * 100, 0, 100);
     setAvatarPositionPicker({ x, y });
-    setFormState((prev) => ({ ...prev, avatar_position: `${x}% ${y}%` }));
   };
 
   const fetchAnimes = async () => {
@@ -462,7 +460,7 @@ export default function ProfilePage() {
           display_name: maskNgWords(formState.display_name.trim()),
           bio: maskNgWords(formState.bio.trim()),
           avatar_url: formState.avatar_url.trim(),
-          avatar_position: formState.avatar_position,
+          avatar_position: `${avatarPositionPicker.x}% ${avatarPositionPicker.y}%`,
         })
         .eq('id', user.id);
 
@@ -662,9 +660,11 @@ export default function ProfilePage() {
                 <p className="text-xs text-gray-500">丸の中をドラッグして位置を調整できます</p>
                 <div
                   id="avatar-position-picker"
+                  ref={avatarPickerRef}
                   className="w-32 h-32 rounded-full overflow-hidden border border-sky-200 touch-none select-none"
                   onPointerDown={(event) => {
                     avatarAdjustingRef.current = true;
+                    (event.currentTarget as HTMLDivElement).setPointerCapture(event.pointerId);
                     updateAvatarPositionFromClientPoint(event.clientX, event.clientY);
                   }}
                   onPointerMove={(event) => {
@@ -672,6 +672,9 @@ export default function ProfilePage() {
                     updateAvatarPositionFromClientPoint(event.clientX, event.clientY);
                   }}
                   onPointerUp={() => {
+                    avatarAdjustingRef.current = false;
+                  }}
+                  onPointerCancel={() => {
                     avatarAdjustingRef.current = false;
                   }}
                   onPointerLeave={() => {
