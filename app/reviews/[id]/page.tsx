@@ -299,7 +299,7 @@ export default function ReviewDetailPage() {
 
       <div className="card p-6 md:p-8 space-y-6">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
+          <Link href={`/users/${review.user_id}`} className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
               {review.users?.avatar_url ? (
                 <img
@@ -313,14 +313,14 @@ export default function ReviewDetailPage() {
               )}
             </div>
             <div>
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold text-gray-900 hover:text-sky-700 transition-colors">
                 {review.users?.display_name || review.users?.username}
               </p>
               <p className="text-sm text-gray-500">
                 {new Date(review.created_at).toLocaleString('ja-JP')}
               </p>
             </div>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-2">
             {review.has_spoiler && (
@@ -369,7 +369,7 @@ export default function ReviewDetailPage() {
             {comments.map((comment) => (
               <div key={comment.id} className="card p-5">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                  <Link href={`/users/${comment.user_id}`} className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
                       {comment.users?.avatar_url ? (
                         <img
@@ -383,14 +383,14 @@ export default function ReviewDetailPage() {
                       )}
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-semibold text-gray-900 hover:text-sky-700 transition-colors">
                         {comment.users?.display_name || comment.users?.username}
                       </p>
                       <p className="text-xs text-gray-500">
                         {new Date(comment.created_at).toLocaleString('ja-JP')}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"

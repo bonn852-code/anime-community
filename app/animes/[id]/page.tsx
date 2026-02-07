@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Hash, Star, MessageCircle, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -10,6 +10,7 @@ import type { Anime } from '@/types/database';
 
 interface ReviewWithUser {
   id: number;
+  user_id: string;
   title: string;
   content: string;
   has_spoiler: boolean;
@@ -29,6 +30,7 @@ interface AnimeStats {
 
 export default function AnimeDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const animeId = Number(params.id);
   const { user } = useAuth();
 
@@ -84,6 +86,7 @@ export default function AnimeDetailPage() {
         .from('reviews')
         .select(`
           id,
+          user_id,
           title,
           content,
           has_spoiler,
@@ -406,21 +409,31 @@ export default function AnimeDetailPage() {
                   <div className="card p-5 h-full hover:shadow-2xl transition-shadow">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden">
-                          {review.users?.avatar_url ? (
-                            <img
-                              src={review.users.avatar_url}
-                              alt={review.users.username}
-                              className="w-full h-full object-cover"
-                              style={{ objectPosition: review.users.avatar_position || 'center' }}
-                            />
-                          ) : (
-                            review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          {review.users?.display_name || review.users?.username}
-                        </p>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            router.push(`/users/${review.user_id}`);
+                          }}
+                          className="flex items-center gap-2 text-left"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white text-xs font-semibold overflow-hidden">
+                            {review.users?.avatar_url ? (
+                              <img
+                                src={review.users.avatar_url}
+                                alt={review.users.username}
+                                className="w-full h-full object-cover"
+                                style={{ objectPosition: review.users.avatar_position || 'center' }}
+                              />
+                            ) : (
+                              review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 hover:text-sky-700 transition-colors">
+                            {review.users?.display_name || review.users?.username}
+                          </p>
+                        </button>
                       </div>
                       {review.has_spoiler && (
                         <span className="badge bg-yellow-100 text-yellow-700">ネタバレ</span>

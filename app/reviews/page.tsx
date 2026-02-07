@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
@@ -13,6 +13,7 @@ interface ReviewWithDetails {
   content: string;
   has_spoiler: boolean;
   created_at: string;
+  user_id: string;
   users: {
     username: string;
     display_name: string | null;
@@ -27,6 +28,7 @@ interface ReviewWithDetails {
 
 function ReviewsContent() {
   const { user } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [reviews, setReviews] = useState<ReviewWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +48,7 @@ function ReviewsContent() {
           content,
           has_spoiler,
           created_at,
+          user_id,
           users (username, display_name, avatar_url, avatar_position),
           animes (id, title)
         `)
@@ -107,26 +110,36 @@ function ReviewsContent() {
               <div className="card p-6 hover:shadow-2xl transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
-                      {review.users?.avatar_url ? (
-                        <img
-                          src={review.users.avatar_url}
-                          alt={review.users.username}
-                          className="w-full h-full object-cover"
-                          style={{ objectPosition: review.users.avatar_position || 'center' }}
-                        />
-                      ) : (
-                        review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {review.users?.display_name || review.users?.username}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {new Date(review.created_at).toLocaleDateString('ja-JP')}
-                      </p>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        router.push(`/users/${review.user_id}`);
+                      }}
+                      className="flex items-center space-x-3 text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                        {review.users?.avatar_url ? (
+                          <img
+                            src={review.users.avatar_url}
+                            alt={review.users.username}
+                            className="w-full h-full object-cover"
+                            style={{ objectPosition: review.users.avatar_position || 'center' }}
+                          />
+                        ) : (
+                          review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 hover:text-sky-700 transition-colors">
+                          {review.users?.display_name || review.users?.username}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(review.created_at).toLocaleDateString('ja-JP')}
+                        </p>
+                      </div>
+                    </button>
                   </div>
                   {review.has_spoiler && (
                     <span className="badge bg-yellow-100 text-yellow-700">
