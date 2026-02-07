@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Settings, MessageCircle, Heart, Save, UploadCloud, Tag } from 'lucide-react';
@@ -64,6 +64,24 @@ interface UserCategoryAnime {
   } | null;
 }
 
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const parseAvatarPosition = (value: string | null | undefined): { x: number; y: number } => {
+  if (!value) return { x: 50, y: 50 };
+  const percentMatch = value.match(/^(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%$/);
+  if (percentMatch) {
+    return {
+      x: clamp(Number(percentMatch[1]), 0, 100),
+      y: clamp(Number(percentMatch[2]), 0, 100),
+    };
+  }
+  if (value === 'top') return { x: 50, y: 20 };
+  if (value === 'bottom') return { x: 50, y: 80 };
+  if (value === 'left') return { x: 20, y: 50 };
+  if (value === 'right') return { x: 80, y: 50 };
+  return { x: 50, y: 50 };
+};
+
 export default function ProfilePage() {
   const REVIEWS_PER_PAGE = 6;
   const { user, loading: authLoading } = useAuth();
@@ -94,6 +112,8 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [reviewPage, setReviewPage] = useState(1);
+  const [avatarPositionPicker, setAvatarPositionPicker] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
+  const avatarAdjustingRef = useRef(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -401,8 +421,22 @@ export default function ProfilePage() {
     }
   }, [reviews.length, reviewPage]);
 
+  useEffect(() => {
+    setAvatarPositionPicker(parseAvatarPosition(formState.avatar_position));
+  }, [formState.avatar_position]);
+
   const totalReviewPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
   const visibleReviews = reviews.slice((reviewPage - 1) * REVIEWS_PER_PAGE, reviewPage * REVIEWS_PER_PAGE);
+
+  const updateAvatarPositionFromClientPoint = (clientX: number, clientY: number) => {
+    const target = document.getElementById('avatar-position-picker');
+    if (!target) return;
+    const rect = target.getBoundingClientRect();
+    const x = clamp(((clientX - rect.left) / rect.width) * 100, 0, 100);
+    const y = clamp(((clientY - rect.top) / rect.height) * 100, 0, 100);
+    setAvatarPositionPicker({ x, y });
+    setFormState((prev) => ({ ...prev, avatar_position: `${x}% ${y}%` }));
+  };
 
   const fetchAnimes = async () => {
     try {
@@ -602,50 +636,57 @@ export default function ProfilePage() {
             />
           </div>
 
-          <div>
-            <label className="text-sm font-semibold text-gray-900">アバター画像URL</label>
-            <input
-              value={formState.avatar_url}
-              onChange={(e) => setFormState((prev) => ({ ...prev, avatar_url: e.target.value }))}
-              className="input-field mt-2"
-              placeholder="https://..."
-            />
-            <div className="mt-3">
-              <label className="text-xs font-semibold text-gray-600">画像をアップロード</label>
-              <div className="mt-2 flex items-center gap-3">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      handleAvatarUpload(file);
-                    }
-                  }}
-                  className="text-sm text-gray-600"
-                />
-                {avatarUploading && (
-                  <div className="text-xs text-gray-500 flex items-center gap-2">
-                    <UploadCloud className="w-4 h-4" />
-                    アップロード中...
-                  </div>
-                )}
-              </div>
+          <div className="space-y-3">
+            <label className="text-sm font-semibold text-gray-900">プロフィール画像</label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleAvatarUpload(file);
+                  }
+                }}
+                className="text-sm text-gray-600"
+              />
+              {avatarUploading && (
+                <div className="text-xs text-gray-500 flex items-center gap-2">
+                  <UploadCloud className="w-4 h-4" />
+                  アップロード中...
+                </div>
+              )}
             </div>
-          </div>
-          <div>
-            <label className="text-sm font-semibold text-gray-900">画像の表示位置</label>
-            <select
-              value={formState.avatar_position}
-              onChange={(e) => setFormState((prev) => ({ ...prev, avatar_position: e.target.value }))}
-              className="input-field mt-2"
-            >
-              <option value="center">中央</option>
-              <option value="top">上</option>
-              <option value="bottom">下</option>
-              <option value="left">左</option>
-              <option value="right">右</option>
-            </select>
+            {formState.avatar_url && (
+              <div className="space-y-2">
+                <p className="text-xs text-gray-500">丸の中をドラッグして位置を調整できます</p>
+                <div
+                  id="avatar-position-picker"
+                  className="w-32 h-32 rounded-full overflow-hidden border border-sky-200 touch-none select-none"
+                  onPointerDown={(event) => {
+                    avatarAdjustingRef.current = true;
+                    updateAvatarPositionFromClientPoint(event.clientX, event.clientY);
+                  }}
+                  onPointerMove={(event) => {
+                    if (!avatarAdjustingRef.current) return;
+                    updateAvatarPositionFromClientPoint(event.clientX, event.clientY);
+                  }}
+                  onPointerUp={() => {
+                    avatarAdjustingRef.current = false;
+                  }}
+                  onPointerLeave={() => {
+                    avatarAdjustingRef.current = false;
+                  }}
+                >
+                  <img
+                    src={formState.avatar_url}
+                    alt="avatar preview"
+                    className="w-full h-full object-cover pointer-events-none"
+                    style={{ objectPosition: `${avatarPositionPicker.x}% ${avatarPositionPicker.y}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="card p-5 bg-sky-50/60 space-y-4">

@@ -406,7 +406,7 @@ export default function AnimesPage() {
 
       {filteredAnimes.length > 0 ? (
         <div className="space-y-6">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
             {paginatedAnimes.map((anime) => (
               <Link key={anime.id} href={`/animes/${anime.id}`}>
                 <div className="card overflow-hidden group cursor-pointer hover:scale-105 transition-transform">
@@ -425,19 +425,19 @@ export default function AnimesPage() {
                     )}
                   </div>
 
-                  <div className="p-4">
-                    <h3 className="font-bold text-gray-900 line-clamp-2 mb-1 group-hover:text-sky-600 transition-colors">
+                  <div className="p-2 md:p-4">
+                    <h3 className="text-xs md:text-base font-bold text-gray-900 line-clamp-2 mb-1 group-hover:text-sky-600 transition-colors">
                       {anime.title}
                     </h3>
 
                     {anime.title_en && (
-                      <p className="text-xs text-gray-500 line-clamp-1 mb-2">
+                      <p className="hidden md:block text-xs text-gray-500 line-clamp-1 mb-2">
                         {anime.title_en}
                       </p>
                     )}
 
                     {anime.genre && anime.genre.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
+                      <div className="hidden md:flex flex-wrap gap-1">
                         {anime.genre.slice(0, 3).map((g, index) => (
                           <span key={index} className="text-xs px-2 py-1 rounded-full bg-sky-100 text-sky-700">
                             {g}
