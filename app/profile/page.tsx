@@ -65,6 +65,7 @@ interface UserCategoryAnime {
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const formatAvatarPosition = (x: number, y: number) => `${Math.round(clamp(x, 0, 100))}% ${Math.round(clamp(y, 0, 100))}%`;
 
 const parseAvatarPosition = (value: string | null | undefined): { x: number; y: number } => {
   if (!value) return { x: 50, y: 50 };
@@ -474,7 +475,7 @@ export default function ProfilePage() {
           display_name: maskNgWords(formState.display_name.trim()),
           bio: maskNgWords(formState.bio.trim()),
           avatar_url: formState.avatar_url.trim(),
-          avatar_position: `${avatarPositionPicker.x}% ${avatarPositionPicker.y}%`,
+          avatar_position: formatAvatarPosition(avatarPositionPicker.x, avatarPositionPicker.y),
         })
         .eq('id', user.id);
 
