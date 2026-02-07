@@ -149,6 +149,12 @@ export default function MessageThreadPage() {
     }
   };
 
+  const applyMessageUpdate = (updated: MessageRow) => {
+    setMessages((prev) =>
+      prev.map((msg) => (msg.id === updated.id ? { ...msg, ...updated } : msg))
+    );
+  };
+
   useEffect(() => {
     if (!user || !otherId) return;
     const channel = supabase
@@ -169,6 +175,18 @@ export default function MessageThreadPage() {
           if (isAtBottomRef.current && !manualHoldRef.current) {
             requestAnimationFrame(scrollToBottom);
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'direct_messages' },
+        (payload) => {
+          const msg = payload.new as MessageRow;
+          const isRelevant =
+            (msg.sender_id === user.id && msg.recipient_id === otherId) ||
+            (msg.sender_id === otherId && msg.recipient_id === user.id);
+          if (!isRelevant) return;
+          applyMessageUpdate(msg);
         }
       )
       .subscribe();
