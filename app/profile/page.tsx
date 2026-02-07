@@ -675,7 +675,7 @@ export default function ProfilePage() {
                 <div
                   id="avatar-position-picker"
                   ref={avatarPickerRef}
-                  className="w-32 h-32 rounded-full overflow-hidden border border-sky-200 touch-none select-none cursor-move"
+                  className="relative w-32 h-32 rounded-full overflow-hidden border border-sky-200 touch-none select-none cursor-move"
                   onPointerDown={(event) => {
                     startAvatarAdjust(event.clientX, event.clientY);
                     (event.currentTarget as HTMLDivElement).setPointerCapture(event.pointerId);
@@ -685,34 +685,18 @@ export default function ProfilePage() {
                   }}
                   onPointerUp={stopAvatarAdjust}
                   onPointerCancel={stopAvatarAdjust}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    startAvatarAdjust(event.clientX, event.clientY);
-                  }}
-                  onMouseMove={(event) => {
-                    moveAvatarAdjust(event.clientX, event.clientY);
-                  }}
-                  onMouseUp={stopAvatarAdjust}
-                  onMouseLeave={stopAvatarAdjust}
-                  onTouchStart={(event) => {
-                    const touch = event.touches[0];
-                    if (!touch) return;
-                    startAvatarAdjust(touch.clientX, touch.clientY);
-                  }}
-                  onTouchMove={(event) => {
-                    event.preventDefault();
-                    const touch = event.touches[0];
-                    if (!touch) return;
-                    moveAvatarAdjust(touch.clientX, touch.clientY);
-                  }}
-                  onTouchEnd={stopAvatarAdjust}
-                  onTouchCancel={stopAvatarAdjust}
+                  onPointerLeave={stopAvatarAdjust}
                 >
                   <img
                     src={formState.avatar_url}
                     alt="avatar preview"
-                    className="w-full h-full object-cover pointer-events-none"
-                    style={{ objectPosition: `${avatarPositionPicker.x}% ${avatarPositionPicker.y}%` }}
+                    className="pointer-events-none absolute left-1/2 top-1/2 max-w-none max-h-none"
+                    style={{
+                      width: '160%',
+                      height: '160%',
+                      objectFit: 'cover',
+                      transform: `translate(-${avatarPositionPicker.x}%, -${avatarPositionPicker.y}%)`,
+                    }}
                   />
                 </div>
               </div>
