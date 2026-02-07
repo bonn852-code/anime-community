@@ -117,6 +117,20 @@ export default function MessageThreadPage() {
     }, 50);
   };
 
+  const markThreadAsRead = async () => {
+    if (!user || !otherId) return;
+    try {
+      await supabase
+        .from('direct_messages')
+        .update({ is_read: true })
+        .eq('recipient_id', user.id)
+        .eq('sender_id', otherId)
+        .eq('is_read', false);
+    } catch (error) {
+      console.error('既読更新エラー:', error);
+    }
+  };
+
   const mergeIncoming = (incoming: MessageRow[]) => {
     if (incoming.length === 0) return;
     setMessages((prev) => {
@@ -149,6 +163,9 @@ export default function MessageThreadPage() {
             (msg.sender_id === otherId && msg.recipient_id === user.id);
           if (!isRelevant) return;
           mergeIncoming([msg]);
+          if (msg.sender_id === otherId && msg.recipient_id === user.id) {
+            void markThreadAsRead();
+          }
           if (isAtBottomRef.current && !manualHoldRef.current) {
             requestAnimationFrame(scrollToBottom);
           }
@@ -217,12 +234,7 @@ export default function MessageThreadPage() {
       }
       setHasMore(newestFirst.length === pageSize);
 
-      await supabase
-        .from('direct_messages')
-        .update({ is_read: true })
-        .eq('recipient_id', user!.id)
-        .eq('sender_id', otherId)
-        .eq('is_read', false);
+      await markThreadAsRead();
     } catch (error) {
       console.error('メッセージ取得エラー:', error);
     } finally {
@@ -255,6 +267,7 @@ export default function MessageThreadPage() {
       const incoming = data || [];
       if (incoming.length > 0) {
         mergeIncoming(incoming);
+        await markThreadAsRead();
         if (isAtBottomRef.current && !manualHoldRef.current) {
           requestAnimationFrame(scrollToBottom);
         }
