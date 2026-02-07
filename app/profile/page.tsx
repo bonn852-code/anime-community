@@ -705,12 +705,9 @@ export default function ProfilePage() {
                   <img
                     src={formState.avatar_url}
                     alt="avatar preview"
-                    className="pointer-events-none absolute left-1/2 top-1/2 max-w-none max-h-none"
+                    className="w-full h-full object-cover pointer-events-none"
                     style={{
-                      width: '130%',
-                      height: '130%',
-                      objectFit: 'cover',
-                      transform: `translate(-${avatarPositionPicker.x}%, -${avatarPositionPicker.y}%)`,
+                      objectPosition: `${avatarPositionPicker.x}% ${avatarPositionPicker.y}%`,
                     }}
                   />
                 </div>
