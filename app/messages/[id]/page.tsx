@@ -128,6 +128,7 @@ export default function MessageThreadPage() {
         .eq('recipient_id', user.id)
         .eq('sender_id', otherId)
         .eq('is_read', false);
+      window.dispatchEvent(new CustomEvent('dm:read'));
     } catch (error) {
       console.error('既読更新エラー:', error);
     }
@@ -373,12 +374,6 @@ export default function MessageThreadPage() {
         content: content.trim(),
       });
       if (error) throw error;
-      await supabase.from('notifications').insert({
-        user_id: otherId,
-        actor_id: user.id,
-        type: 'dm',
-        review_id: null,
-      });
       setContent('');
       await fetchThread({ silent: true });
     } catch (error) {

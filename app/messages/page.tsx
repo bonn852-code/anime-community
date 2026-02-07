@@ -114,6 +114,20 @@ export default function MessagesPage() {
         .limit(200);
       if (error) throw error;
       setMessages(data || []);
+      const unreadExists = (data || []).some((msg) => msg.recipient_id === user!.id && !msg.is_read);
+      if (unreadExists) {
+        await supabase
+          .from('direct_messages')
+          .update({ is_read: true })
+          .eq('recipient_id', user!.id)
+          .eq('is_read', false);
+        setMessages((prev) =>
+          prev.map((msg) => (msg.recipient_id === user!.id ? { ...msg, is_read: true } : msg))
+        );
+        window.dispatchEvent(new CustomEvent('dm:read'));
+      } else {
+        window.dispatchEvent(new CustomEvent('dm:read'));
+      }
 
       const ids = new Set<string>();
       (data || []).forEach((item) => {

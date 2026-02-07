@@ -14,11 +14,13 @@ export default function Header() {
   const { user, loading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [dmUnreadCount, setDmUnreadCount] = useState(0);
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
   const isAdmin = Boolean(user?.email && user.email.toLowerCase() === adminEmail);
 
   const isActive = (path: string) => pathname === path;
   const showUnreadBadge = pathname !== "/notifications" && unreadCount > 0;
+  const showDmBadge = !pathname.startsWith("/messages") && dmUnreadCount > 0;
 
   const handleSignOut = async () => {
     try {
@@ -68,6 +70,45 @@ export default function Header() {
       window.removeEventListener("notifications:read", handleRead as EventListener);
     };
   }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setDmUnreadCount(0);
+      return;
+    }
+    const fetchDmUnread = async () => {
+      const { count } = await supabase
+        .from("direct_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("recipient_id", user.id)
+        .eq("is_read", false);
+      setDmUnreadCount(count || 0);
+    };
+
+    fetchDmUnread();
+    const interval = setInterval(fetchDmUnread, 6000);
+    const handleRead = () => {
+      fetchDmUnread();
+    };
+    window.addEventListener("dm:read", handleRead as EventListener);
+
+    const channel = supabase
+      .channel(`dm-unread-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "direct_messages", filter: `recipient_id=eq.${user.id}` },
+        () => {
+          fetchDmUnread();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+      window.removeEventListener("dm:read", handleRead as EventListener);
+    };
+  }, [user, pathname]);
 
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200 shadow-sm">
@@ -134,13 +175,16 @@ export default function Header() {
             </Link>
             <Link
               href="/messages"
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`relative px-4 py-2 rounded-lg font-medium transition-all ${
                 isActive("/messages")
                   ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
             >
               DM
+              {showDmBadge && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-red-500"></span>
+              )}
             </Link>
             {isAdmin && (
               <Link
@@ -251,7 +295,7 @@ export default function Header() {
             </Link>
             <Link
               href="/messages"
-              className={`flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
+              className={`relative flex items-center gap-1 px-3 py-2 rounded-full text-sm whitespace-nowrap ${
                 isActive("/messages")
                   ? "bg-sky-100 text-sky-700"
                   : "text-gray-700 bg-gray-100"
@@ -259,6 +303,9 @@ export default function Header() {
             >
               <MessageCircle className="w-4 h-4" />
               DM
+              {showDmBadge && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500"></span>
+              )}
             </Link>
             {isAdmin && (
               <Link
@@ -382,7 +429,7 @@ export default function Header() {
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
-                DM
+                DM{showDmBadge ? ` (${dmUnreadCount})` : ""}
               </Link>
               {isAdmin && (
                 <Link
