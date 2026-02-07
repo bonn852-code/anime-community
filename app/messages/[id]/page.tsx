@@ -50,8 +50,6 @@ export default function MessageThreadPage() {
   const manualHoldRef = useRef(false);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const latestAtRef = useRef<string | null>(null);
-  const pageRef = useRef<HTMLDivElement | null>(null);
-  const [panelHeight, setPanelHeight] = useState<number | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -220,22 +218,6 @@ export default function MessageThreadPage() {
     inputRef.current.style.height = 'auto';
     inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 160)}px`;
   }, [content]);
-
-  useEffect(() => {
-    const updatePanelHeight = () => {
-      if (!pageRef.current) return;
-      const rect = pageRef.current.getBoundingClientRect();
-      const next = Math.max(360, Math.floor(window.innerHeight - rect.top - 8));
-      setPanelHeight(next);
-    };
-    updatePanelHeight();
-    window.addEventListener('resize', updatePanelHeight);
-    window.addEventListener('orientationchange', updatePanelHeight);
-    return () => {
-      window.removeEventListener('resize', updatePanelHeight);
-      window.removeEventListener('orientationchange', updatePanelHeight);
-    };
-  }, []);
 
   // Realtime only: polling disabled.
 
@@ -455,11 +437,7 @@ export default function MessageThreadPage() {
   const showJumpToLatest = !isAtBottom || manualHoldRef.current;
 
   return (
-    <div
-      ref={pageRef}
-      className="flex flex-col gap-4 overflow-hidden"
-      style={panelHeight ? { height: `${panelHeight}px` } : undefined}
-    >
+    <div className="-my-8 h-[calc(100svh-64px)] flex flex-col gap-4 overflow-hidden">
       <div className="flex items-center gap-3">
         <Link href="/messages" className="p-2 rounded-full bg-white shadow hover:shadow-md">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
