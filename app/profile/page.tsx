@@ -358,6 +358,20 @@ export default function ProfilePage() {
     await fetchCategoryItems();
   };
 
+  const handleRemoveFromCategory = async (itemId: number) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from('user_category_animes')
+      .delete()
+      .eq('id', itemId)
+      .eq('user_id', user.id);
+    if (error) {
+      console.error('カテゴリ削除エラー:', error);
+      return;
+    }
+    await fetchCategoryItems();
+  };
+
   const fetchLikesReceived = async () => {
     if (!user) return;
     try {
@@ -830,24 +844,33 @@ export default function ProfilePage() {
                   {items.length > 0 ? (
                     <div className="space-y-2">
                       {items.slice(0, 6).map((item) => (
-                        <Link key={item.id} href={`/animes/${item.anime_id}`} className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex-shrink-0">
-                            {item.animes?.image_url ? (
-                              <img
-                                src={item.animes.image_url}
-                                alt={item.animes.title}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
-                                —
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-700 line-clamp-1 hover:text-sky-700 transition-colors">
-                            {item.animes?.title || 'タイトル未設定'}
-                          </p>
-                        </Link>
+                        <div key={item.id} className="flex items-center justify-between gap-2">
+                          <Link href={`/animes/${item.anime_id}`} className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex-shrink-0">
+                              {item.animes?.image_url ? (
+                                <img
+                                  src={item.animes.image_url}
+                                  alt={item.animes.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                                  —
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-700 line-clamp-1 hover:text-sky-700 transition-colors">
+                              {item.animes?.title || 'タイトル未設定'}
+                            </p>
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFromCategory(item.id)}
+                            className="text-xs font-semibold text-red-500 hover:text-red-600"
+                          >
+                            削除
+                          </button>
+                        </div>
                       ))}
                       {items.length > 6 && (
                         <p className="text-xs text-gray-400">他 {items.length - 6} 件</p>
