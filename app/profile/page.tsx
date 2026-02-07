@@ -692,8 +692,8 @@ export default function ProfilePage() {
                     alt="avatar preview"
                     className="pointer-events-none absolute left-1/2 top-1/2 max-w-none max-h-none"
                     style={{
-                      width: '160%',
-                      height: '160%',
+                      width: '130%',
+                      height: '130%',
                       objectFit: 'cover',
                       transform: `translate(-${avatarPositionPicker.x}%, -${avatarPositionPicker.y}%)`,
                     }}
