@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Settings, MessageCircle, Heart, Save, UploadCloud, Tag } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { maskNgWords } from '@/lib/ngWordFilter';
@@ -64,6 +65,7 @@ interface UserCategoryAnime {
 }
 
 export default function ProfilePage() {
+  const REVIEWS_PER_PAGE = 6;
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -91,6 +93,7 @@ export default function ProfilePage() {
   const [favoriteSearch, setFavoriteSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [reviewPage, setReviewPage] = useState(1);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -209,8 +212,7 @@ export default function ProfilePage() {
           animes (id, title)
         `)
         .eq('user_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(6);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       const normalized = (data || []).map((review) => {
@@ -218,6 +220,7 @@ export default function ProfilePage() {
         return { ...review, animes: animeValue };
       });
       setReviews(normalized);
+      setReviewPage(1);
     } catch (error) {
       console.error('感想取得エラー:', error);
     }
@@ -390,6 +393,16 @@ export default function ProfilePage() {
     });
     return groups;
   }, [watchlist]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
+    if (reviewPage > totalPages) {
+      setReviewPage(totalPages);
+    }
+  }, [reviews.length, reviewPage]);
+
+  const totalReviewPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
+  const visibleReviews = reviews.slice((reviewPage - 1) * REVIEWS_PER_PAGE, reviewPage * REVIEWS_PER_PAGE);
 
   const fetchAnimes = async () => {
     try {
@@ -749,7 +762,7 @@ export default function ProfilePage() {
         </div>
 
         {categories.length > 0 ? (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 max-h-[520px] overflow-y-auto pr-1">
             {categories.map((category) => {
               const items = categoryItems.filter((item) => item.category_id === category.id);
               return (
@@ -761,7 +774,7 @@ export default function ProfilePage() {
                   {items.length > 0 ? (
                     <div className="space-y-2">
                       {items.slice(0, 6).map((item) => (
-                        <div key={item.id} className="flex items-center gap-3">
+                        <Link key={item.id} href={`/animes/${item.anime_id}`} className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-white overflow-hidden flex-shrink-0">
                             {item.animes?.image_url ? (
                               <img
@@ -775,10 +788,10 @@ export default function ProfilePage() {
                               </div>
                             )}
                           </div>
-                          <p className="text-sm text-gray-700 line-clamp-1">
+                          <p className="text-sm text-gray-700 line-clamp-1 hover:text-sky-700 transition-colors">
                             {item.animes?.title || 'タイトル未設定'}
                           </p>
-                        </div>
+                        </Link>
                       ))}
                       {items.length > 6 && (
                         <p className="text-xs text-gray-400">他 {items.length - 6} 件</p>
@@ -804,7 +817,7 @@ export default function ProfilePage() {
           </span>
         </div>
         {watchlist.length > 0 ? (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 max-h-[520px] overflow-y-auto pr-1">
             {(['watching', 'plan', 'completed', 'paused'] as const).map((status) => {
               const label =
                 status === 'watching'
@@ -824,7 +837,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="space-y-2">
                     {items.slice(0, 6).map((item) => (
-                      <div key={item.anime_id} className="flex items-center gap-3">
+                      <Link key={item.anime_id} href={`/animes/${item.anime_id}`} className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                           {item.animes?.image_url ? (
                             <img
@@ -838,10 +851,10 @@ export default function ProfilePage() {
                             </div>
                           )}
                         </div>
-                        <p className="text-sm text-gray-700 line-clamp-1">
+                        <p className="text-sm text-gray-700 line-clamp-1 hover:text-sky-700 transition-colors">
                           {item.animes?.title || 'タイトル未設定'}
                         </p>
-                      </div>
+                      </Link>
                     ))}
                     {items.length > 6 && (
                       <p className="text-xs text-gray-400">他 {items.length - 6} 件</p>
@@ -867,26 +880,67 @@ export default function ProfilePage() {
         </div>
 
         {reviews.length > 0 ? (
-          <div className="grid md:grid-cols-2 gap-6">
-            {reviews.map((review: any) => (
-              <div key={review.id} className="card p-6">
-                {review.animes && (
-                  <p className="text-sm text-sky-600 font-medium mb-2">
-                    {review.animes.title}
+          <div className="space-y-5">
+            <div className="grid md:grid-cols-2 gap-6 max-h-[560px] overflow-y-auto pr-1">
+              {visibleReviews.map((review: any) => (
+                <div key={review.id} className="card p-6">
+                  {review.animes && (
+                    <Link
+                      href={`/animes/${review.animes.id}`}
+                      className="text-sm text-sky-600 font-medium mb-2 inline-block hover:text-sky-700"
+                    >
+                      {review.animes.title}
+                    </Link>
+                  )}
+
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                    {review.title}
+                  </h3>
+
+                  <Link href={`/reviews/${review.id}`} className="text-gray-700 line-clamp-3 hover:text-sky-700 transition-colors block">
+                    {review.content}
+                  </Link>
+
+                  <p className="text-sm text-gray-500 mt-3">
+                    {new Date(review.created_at).toLocaleDateString('ja-JP')}
                   </p>
-                )}
-
-                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                  {review.title}
-                </h3>
-
-                <p className="text-gray-700 line-clamp-3">{review.content}</p>
-
-                <p className="text-sm text-gray-500 mt-3">
-                  {new Date(review.created_at).toLocaleDateString('ja-JP')}
-                </p>
+                </div>
+              ))}
+            </div>
+            {totalReviewPages > 1 && (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setReviewPage((page) => Math.max(1, page - 1))}
+                  disabled={reviewPage === 1}
+                  className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  前へ
+                </button>
+                {Array.from({ length: totalReviewPages }, (_, index) => index + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setReviewPage(page)}
+                    className={`px-3 py-2 rounded-lg text-sm ${
+                      page === reviewPage
+                        ? 'bg-sky-600 text-white'
+                        : 'border border-sky-200 text-sky-700 hover:bg-sky-50'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setReviewPage((page) => Math.min(totalReviewPages, page + 1))}
+                  disabled={reviewPage === totalReviewPages}
+                  className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  次へ
+                </button>
               </div>
-            ))}
+            )}
           </div>
         ) : (
           <div className="card p-8 text-center">
@@ -905,9 +959,9 @@ export default function ProfilePage() {
         </div>
 
         {favorites.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-3 gap-3">
             {favorites.map((favorite) => (
-              <div key={favorite.anime_id} className="card overflow-hidden">
+              <Link key={favorite.anime_id} href={`/animes/${favorite.anime_id}`} className="card overflow-hidden block">
                 <div className="aspect-[3/4] bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100">
                   {favorite.animes?.image_url ? (
                     <img
@@ -921,12 +975,12 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
-                <div className="p-4">
-                  <p className="font-semibold text-gray-900">
+                <div className="p-3">
+                  <p className="font-semibold text-gray-900 text-xs sm:text-sm line-clamp-2">
                     {favorite.animes?.title || '未設定'}
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

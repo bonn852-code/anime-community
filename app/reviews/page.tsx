@@ -27,18 +27,26 @@ interface ReviewWithDetails {
 }
 
 function ReviewsContent() {
+  const ITEMS_PER_PAGE = 12;
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [reviews, setReviews] = useState<ReviewWithDetails[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const animeId = searchParams.get('animeId');
 
   useEffect(() => {
-    fetchReviews();
+    setCurrentPage(1);
   }, [animeId]);
 
+  useEffect(() => {
+    fetchReviews();
+  }, [animeId, currentPage]);
+
   const fetchReviews = async () => {
+    setLoading(true);
     try {
       let query = supabase
         .from('reviews')
@@ -51,7 +59,7 @@ function ReviewsContent() {
           user_id,
           users (username, display_name, avatar_url, avatar_position),
           animes (id, title)
-        `)
+        `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
       const parsedAnimeId = animeId ? Number(animeId) : null;
@@ -59,9 +67,12 @@ function ReviewsContent() {
         query = query.eq('anime_id', parsedAnimeId);
       }
 
-      const { data, error } = await query.limit(20);
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      const { data, error, count } = await query.range(from, to);
 
       if (error) throw error;
+      setTotalCount(count || 0);
       const normalized = (data || []).map((review) => {
         const userValue = Array.isArray(review.users) ? review.users[0] ?? null : review.users ?? null;
         const animeValue = Array.isArray(review.animes) ? review.animes[0] ?? null : review.animes ?? null;
@@ -83,6 +94,8 @@ function ReviewsContent() {
     );
   }
 
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -91,7 +104,7 @@ function ReviewsContent() {
             感想一覧
           </h1>
           <p className="text-gray-600">
-            みんなの最新感想をチェック
+            みんなの最新感想をチェック（{totalCount}件）
           </p>
         </div>
         
@@ -104,66 +117,102 @@ function ReviewsContent() {
       </div>
 
       {reviews.length > 0 ? (
-        <div className="grid md:grid-cols-2 gap-6">
-          {reviews.map((review) => (
-            <Link key={review.id} href={`/reviews/${review.id}`}>
-              <div className="card p-6 hover:shadow-2xl transition-shadow">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        router.push(`/users/${review.user_id}`);
-                      }}
-                      className="flex items-center space-x-3 text-left"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
-                        {review.users?.avatar_url ? (
-                          <img
-                            src={review.users.avatar_url}
-                            alt={review.users.username}
-                            className="w-full h-full object-cover"
-                            style={{ objectPosition: review.users.avatar_position || 'center' }}
-                          />
-                        ) : (
-                          review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 hover:text-sky-700 transition-colors">
-                          {review.users?.display_name || review.users?.username}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(review.created_at).toLocaleDateString('ja-JP')}
-                        </p>
-                      </div>
-                    </button>
+        <div className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            {reviews.map((review) => (
+              <Link key={review.id} href={`/reviews/${review.id}`}>
+                <div className="card p-6 hover:shadow-2xl transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          router.push(`/users/${review.user_id}`);
+                        }}
+                        className="flex items-center space-x-3 text-left"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+                          {review.users?.avatar_url ? (
+                            <img
+                              src={review.users.avatar_url}
+                              alt={review.users.username}
+                              className="w-full h-full object-cover"
+                              style={{ objectPosition: review.users.avatar_position || 'center' }}
+                            />
+                          ) : (
+                            review.users?.display_name?.charAt(0) || review.users?.username.charAt(0).toUpperCase()
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900 hover:text-sky-700 transition-colors">
+                            {review.users?.display_name || review.users?.username}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(review.created_at).toLocaleDateString('ja-JP')}
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+                    {review.has_spoiler && (
+                      <span className="badge bg-yellow-100 text-yellow-700">
+                        ネタバレ
+                      </span>
+                    )}
                   </div>
-                  {review.has_spoiler && (
-                    <span className="badge bg-yellow-100 text-yellow-700">
-                      ネタバレ
-                    </span>
+
+                  {review.animes && (
+                    <p className="text-sm text-sky-600 font-medium mb-2">
+                      {review.animes.title}
+                    </p>
                   )}
-                </div>
 
-                {review.animes && (
-                  <p className="text-sm text-sky-600 font-medium mb-2">
-                    {review.animes.title}
+                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                    {review.title}
+                  </h3>
+
+                  <p className="text-gray-700 line-clamp-3">
+                    {review.content}
                   </p>
-                )}
-
-                <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                  {review.title}
-                </h3>
-
-                <p className="text-gray-700 line-clamp-3">
-                  {review.content}
-                </p>
-              </div>
-            </Link>
-          ))}
+                </div>
+              </Link>
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                前へ
+              </button>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-2 rounded-lg text-sm ${
+                    page === currentPage
+                      ? 'bg-sky-600 text-white'
+                      : 'border border-sky-200 text-sky-700 hover:bg-sky-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                次へ
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="card p-12 text-center">

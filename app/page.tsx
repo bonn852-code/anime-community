@@ -45,7 +45,9 @@ export default function HomePage() {
           .from('users')
           .select('id, username, display_name, avatar_url')
           .in('id', recommendedUserIds);
-        const filteredUsers = (userProfiles || []).filter((u) => !followingSet.has(u.id));
+        const filteredUsers = (userProfiles || []).filter(
+          (u) => u.id !== user.id && !followingSet.has(u.id)
+        );
         setRecommendedUsers(filteredUsers);
       } else {
         const { data: latestUsers } = await supabase
@@ -53,7 +55,7 @@ export default function HomePage() {
           .select('id, username, display_name, avatar_url')
           .order('created_at', { ascending: false })
           .limit(6);
-        setRecommendedUsers(latestUsers || []);
+        setRecommendedUsers((latestUsers || []).filter((u) => u.id !== user.id));
       }
 
       const { data: recommendedAnimesRaw } = await supabase
