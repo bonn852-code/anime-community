@@ -450,17 +450,19 @@ export default function MessageThreadPage() {
 
       <div className="card p-0 overflow-hidden flex-1 flex flex-col min-h-0 relative">
         <div className="flex items-center gap-3 p-4 border-b border-gray-100 bg-white">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
-            {otherUser.avatar_url ? (
-              <img src={otherUser.avatar_url} alt={otherUser.username} className="w-full h-full object-cover" />
-            ) : (
-              otherUser.display_name?.charAt(0) || otherUser.username.charAt(0).toUpperCase()
-            )}
-          </div>
-          <div>
-            <p className="font-semibold text-gray-900">{title}</p>
-            <p className="text-xs text-gray-500">@{otherUser.username}</p>
-          </div>
+          <Link href={`/users/${otherUser.id}`} className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-white font-semibold overflow-hidden">
+              {otherUser.avatar_url ? (
+                <img src={otherUser.avatar_url} alt={otherUser.username} className="w-full h-full object-cover" />
+              ) : (
+                otherUser.display_name?.charAt(0) || otherUser.username.charAt(0).toUpperCase()
+              )}
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900 hover:text-sky-700 transition-colors">{title}</p>
+              <p className="text-xs text-gray-500">@{otherUser.username}</p>
+            </div>
+          </Link>
         </div>
 
         <div
