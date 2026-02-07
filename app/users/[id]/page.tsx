@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, MessageCircle, ArrowLeft } from 'lucide-react';
+import { Heart, MessageCircle, ArrowLeft, UserPlus, UserCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
 
@@ -84,6 +84,8 @@ export default function UserProfilePage() {
   const [categories, setCategories] = useState<UserCategory[]>([]);
   const [categoryItems, setCategoryItems] = useState<UserCategoryAnime[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followActionLoading, setFollowActionLoading] = useState(false);
 
   const handle = useMemo(() => {
     if (!profile) return '';
@@ -101,6 +103,7 @@ export default function UserProfilePage() {
     }
     if (user && userId) {
       fetchAll();
+      fetchFollowState();
     }
   }, [user, authLoading, userId]);
 
@@ -250,6 +253,58 @@ export default function UserProfilePage() {
     setCategoryItems(normalized);
   };
 
+  const fetchFollowState = async () => {
+    if (!user || !userId || user.id === userId) {
+      setIsFollowing(false);
+      return;
+    }
+    const { data, error } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('follower_id', user.id)
+      .eq('following_id', userId)
+      .maybeSingle();
+    if (error) {
+      console.error('フォロー状態取得エラー:', error);
+      return;
+    }
+    setIsFollowing(Boolean(data));
+  };
+
+  const handleToggleFollow = async () => {
+    if (!user || user.id === userId || followActionLoading) return;
+    setFollowActionLoading(true);
+    try {
+      if (isFollowing) {
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', userId);
+        if (error) throw error;
+        setIsFollowing(false);
+      } else {
+        const { error } = await supabase
+          .from('follows')
+          .insert({ follower_id: user.id, following_id: userId });
+        if (error) throw error;
+        setIsFollowing(true);
+
+        await supabase.from('notifications').insert({
+          user_id: userId,
+          actor_id: user.id,
+          type: 'follow',
+          review_id: null,
+        });
+      }
+      await fetchStats();
+    } catch (error) {
+      console.error('フォロー更新エラー:', error);
+    } finally {
+      setFollowActionLoading(false);
+    }
+  };
+
   const categoryGroups = useMemo(() => {
     const groups = new Map<number, UserCategoryAnime[]>();
     categoryItems.forEach((item) => {
@@ -323,10 +378,30 @@ export default function UserProfilePage() {
               {profile.display_name || profile.username}
             </h2>
             <p className="text-gray-600">@{handle}</p>
-            <div className="mt-3">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link href={`/messages/${profile.id}`} className="btn-primary inline-flex items-center">
                 DMを送る
               </Link>
+              {user?.id !== profile.id && (
+                <button
+                  type="button"
+                  onClick={handleToggleFollow}
+                  className={isFollowing ? 'btn-secondary inline-flex items-center' : 'btn-primary inline-flex items-center'}
+                  disabled={followActionLoading}
+                >
+                  {isFollowing ? (
+                    <>
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      フォロー中
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      フォロー
+                    </>
+                  )}
+                </button>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-6 my-4">
