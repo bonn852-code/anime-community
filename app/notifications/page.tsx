@@ -135,6 +135,8 @@ export default function NotificationsPage() {
             const link =
               notification.type === 'dm'
                 ? `/messages/${notification.actor_id}`
+                : notification.type === 'follow'
+                  ? `/users/${notification.actor_id}`
                 : notification.reviews
                   ? `/reviews/${notification.reviews.id}`
                   : '#';
