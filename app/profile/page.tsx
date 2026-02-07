@@ -436,6 +436,20 @@ export default function ProfilePage() {
     setAvatarPositionPicker({ x, y });
   };
 
+  const startAvatarAdjust = (clientX: number, clientY: number) => {
+    avatarAdjustingRef.current = true;
+    updateAvatarPositionFromClientPoint(clientX, clientY);
+  };
+
+  const moveAvatarAdjust = (clientX: number, clientY: number) => {
+    if (!avatarAdjustingRef.current) return;
+    updateAvatarPositionFromClientPoint(clientX, clientY);
+  };
+
+  const stopAvatarAdjust = () => {
+    avatarAdjustingRef.current = false;
+  };
+
   const fetchAnimes = async () => {
     try {
       const { data, error } = await supabase
@@ -661,25 +675,38 @@ export default function ProfilePage() {
                 <div
                   id="avatar-position-picker"
                   ref={avatarPickerRef}
-                  className="w-32 h-32 rounded-full overflow-hidden border border-sky-200 touch-none select-none"
+                  className="w-32 h-32 rounded-full overflow-hidden border border-sky-200 touch-none select-none cursor-move"
                   onPointerDown={(event) => {
-                    avatarAdjustingRef.current = true;
+                    startAvatarAdjust(event.clientX, event.clientY);
                     (event.currentTarget as HTMLDivElement).setPointerCapture(event.pointerId);
-                    updateAvatarPositionFromClientPoint(event.clientX, event.clientY);
                   }}
                   onPointerMove={(event) => {
-                    if (!avatarAdjustingRef.current) return;
-                    updateAvatarPositionFromClientPoint(event.clientX, event.clientY);
+                    moveAvatarAdjust(event.clientX, event.clientY);
                   }}
-                  onPointerUp={() => {
-                    avatarAdjustingRef.current = false;
+                  onPointerUp={stopAvatarAdjust}
+                  onPointerCancel={stopAvatarAdjust}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    startAvatarAdjust(event.clientX, event.clientY);
                   }}
-                  onPointerCancel={() => {
-                    avatarAdjustingRef.current = false;
+                  onMouseMove={(event) => {
+                    moveAvatarAdjust(event.clientX, event.clientY);
                   }}
-                  onPointerLeave={() => {
-                    avatarAdjustingRef.current = false;
+                  onMouseUp={stopAvatarAdjust}
+                  onMouseLeave={stopAvatarAdjust}
+                  onTouchStart={(event) => {
+                    const touch = event.touches[0];
+                    if (!touch) return;
+                    startAvatarAdjust(touch.clientX, touch.clientY);
                   }}
+                  onTouchMove={(event) => {
+                    event.preventDefault();
+                    const touch = event.touches[0];
+                    if (!touch) return;
+                    moveAvatarAdjust(touch.clientX, touch.clientY);
+                  }}
+                  onTouchEnd={stopAvatarAdjust}
+                  onTouchCancel={stopAvatarAdjust}
                 >
                   <img
                     src={formState.avatar_url}
