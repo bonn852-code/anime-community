@@ -44,6 +44,7 @@ interface CommentWithUser {
 }
 
 export default function ReviewDetailPage() {
+  const COMMENTS_PER_PAGE = 20;
   const params = useParams();
   const router = useRouter();
   const reviewId = Number(params.id);
@@ -57,6 +58,7 @@ export default function ReviewDetailPage() {
   const [replyTo, setReplyTo] = useState<{ id: number; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [commentPage, setCommentPage] = useState(1);
   const [reactionCounts, setReactionCounts] = useState<Record<ReactionType, number>>(createReactionCountMap());
   const [myReactions, setMyReactions] = useState<Set<ReactionType>>(new Set());
   const [titleMap, setTitleMap] = useState<Record<string, UserTitle>>({});
@@ -75,6 +77,13 @@ export default function ReviewDetailPage() {
       setLiked(false);
     }
   }, [user, reviewId]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(comments.length / COMMENTS_PER_PAGE));
+    if (commentPage > totalPages) {
+      setCommentPage(totalPages);
+    }
+  }, [comments.length, commentPage]);
 
   const fetchReview = async () => {
     try {
@@ -133,6 +142,7 @@ export default function ReviewDetailPage() {
       const commentTitles = await fetchUserTitleMap(commentUserIds);
       setTitleMap((prev) => ({ ...prev, ...commentTitles }));
     }
+    return normalized.length;
   };
 
   const fetchTitles = async (reviewOwnerId: string) => {
@@ -248,7 +258,10 @@ export default function ReviewDetailPage() {
       if (error) throw error;
       setCommentContent('');
       setReplyTo(null);
-      await fetchComments();
+      const total = await fetchComments();
+      if (typeof total === 'number') {
+        setCommentPage(Math.max(1, Math.ceil(total / COMMENTS_PER_PAGE)));
+      }
 
       if (review && review.user_id !== user.id) {
         await supabase.from('notifications').insert({
@@ -357,6 +370,12 @@ export default function ReviewDetailPage() {
     );
   }
 
+  const totalCommentPages = Math.max(1, Math.ceil(comments.length / COMMENTS_PER_PAGE));
+  const visibleComments = comments.slice(
+    (commentPage - 1) * COMMENTS_PER_PAGE,
+    commentPage * COMMENTS_PER_PAGE
+  );
+
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-3">
@@ -464,7 +483,7 @@ export default function ReviewDetailPage() {
 
         {comments.length > 0 ? (
           <div className="space-y-4">
-            {comments.map((comment) => (
+            {visibleComments.map((comment) => (
               <div key={comment.id} className="card p-5">
                 <div className="flex items-start justify-between gap-3">
                   <Link href={`/users/${comment.user_id}`} className="flex items-center gap-3">
@@ -515,6 +534,29 @@ export default function ReviewDetailPage() {
                 <p className="text-gray-700 mt-3 whitespace-pre-wrap">{comment.content}</p>
               </div>
             ))}
+            {totalCommentPages > 1 && (
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCommentPage((page) => Math.max(1, page - 1))}
+                  disabled={commentPage === 1}
+                  className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  前へ
+                </button>
+                <span className="text-xs text-gray-500 px-2">
+                  {commentPage} / {totalCommentPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCommentPage((page) => Math.min(totalCommentPages, page + 1))}
+                  disabled={commentPage === totalCommentPages}
+                  className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  次へ
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="card p-8 text-center text-gray-600">まだコメントがありません</div>
