@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ComponentType } from "react";
 import { useAuth } from "@/lib/AuthProvider";
 import { signOut, supabase } from "@/lib/supabase";
+import { useFirstPostPending } from "@/lib/useFirstPostPending";
 
 type NavItem = {
   href: string;
@@ -37,6 +38,7 @@ export default function Header() {
   const { user, loading } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [dmUnreadCount, setDmUnreadCount] = useState(0);
+  const { isFirstPostPending } = useFirstPostPending(user?.id);
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL?.toLowerCase() || "";
   const isAdmin = Boolean(user?.email && user.email.toLowerCase() === adminEmail);
 
@@ -45,6 +47,7 @@ export default function Header() {
 
   const showUnreadBadge = pathname !== "/notifications" && unreadCount > 0;
   const showDmBadge = !pathname.startsWith("/messages") && dmUnreadCount > 0;
+  const showFirstPostCta = Boolean(user && isFirstPostPending);
 
   const navItems = useMemo(() => NAV_ITEMS, []);
 
@@ -143,6 +146,7 @@ export default function Header() {
               const Icon = item.icon;
               const active = isActive(item.href);
               const isDm = item.href === "/messages";
+              const isReviews = item.href === "/reviews";
               return (
                 <Link
                   key={item.href}
@@ -155,6 +159,9 @@ export default function Header() {
                   {item.label}
                   {isDm && showDmBadge && (
                     <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500" />
+                  )}
+                  {isReviews && showFirstPostCta && (
+                    <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-amber-500" />
                   )}
                 </Link>
               );
@@ -174,6 +181,11 @@ export default function Header() {
           <div className="flex items-center gap-1 md:gap-2">
             {!loading && user ? (
               <>
+                {showFirstPostCta && (
+                  <Link href="/reviews/new?onboarding=1" className="btn-primary !px-3 !py-2 text-xs md:text-sm">
+                    初投稿する
+                  </Link>
+                )}
                 <Link
                   href="/notifications"
                   className="relative rounded-full p-2 text-slate-600 transition hover:bg-sky-50 hover:text-sky-700"
@@ -214,6 +226,7 @@ export default function Header() {
             const Icon = item.icon;
             const active = isActive(item.href);
             const isDm = item.href === "/messages";
+            const isReviews = item.href === "/reviews";
             return (
               <Link
                 key={item.href}
@@ -226,6 +239,9 @@ export default function Header() {
                 <span>{item.label}</span>
                 {isDm && showDmBadge && (
                   <span className="absolute right-5 top-2 h-2.5 w-2.5 rounded-full bg-red-500" />
+                )}
+                {isReviews && showFirstPostCta && (
+                  <span className="absolute right-5 top-2 h-2.5 w-2.5 rounded-full bg-amber-500" />
                 )}
               </Link>
             );

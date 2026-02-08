@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { ArrowRight, Sparkles, Users, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
+import { useFirstPostPending } from '@/lib/useFirstPostPending';
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { isFirstPostPending } = useFirstPostPending(user?.id);
   const [recommendedAnimes, setRecommendedAnimes] = useState<any[]>([]);
   const [recommendedUsers, setRecommendedUsers] = useState<any[]>([]);
   const [recommendLoading, setRecommendLoading] = useState(false);
@@ -167,6 +169,39 @@ export default function HomePage() {
           </p>
         </div>
       </section>
+
+      {user && isFirstPostPending && (
+        <section className="card p-6 md:p-8 bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-100">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+            <div>
+              <p className="text-xs font-semibold text-sky-600 mb-1">オンボーディング</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">最初の1投稿をしてみよう</h2>
+              <p className="text-gray-600 mt-1">初投稿が完了すると称号やおすすめ精度が有効になります。</p>
+            </div>
+            <Link href="/reviews/new?onboarding=1" className="btn-primary inline-flex items-center justify-center">
+              初投稿へ進む
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            <Link href="/animes" className="card p-4 hover:shadow-lg transition-shadow">
+              <p className="text-xs text-sky-600 font-semibold mb-1">STEP 1</p>
+              <p className="text-base font-bold text-gray-900 mb-1">作品を選ぶ</p>
+              <p className="text-sm text-gray-600">アニメ一覧から観た作品を開く</p>
+            </Link>
+            <Link href="/reviews/new?onboarding=1" className="card p-4 hover:shadow-lg transition-shadow">
+              <p className="text-xs text-sky-600 font-semibold mb-1">STEP 2</p>
+              <p className="text-base font-bold text-gray-900 mb-1">感想を書く</p>
+              <p className="text-sm text-gray-600">タイトルと本文を入力して投稿する</p>
+            </Link>
+            <Link href="/profile" className="card p-4 hover:shadow-lg transition-shadow">
+              <p className="text-xs text-sky-600 font-semibold mb-1">STEP 3</p>
+              <p className="text-base font-bold text-gray-900 mb-1">反応を確認</p>
+              <p className="text-sm text-gray-600">プロフィールで称号や反応をチェック</p>
+            </Link>
+          </div>
+        </section>
+      )}
 
       {user && (
         <section className="space-y-6">

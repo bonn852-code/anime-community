@@ -110,6 +110,7 @@ function ReviewNewContent() {
         if (ratingError) throw ratingError;
       }
 
+      window.dispatchEvent(new CustomEvent('reviews:changed'));
       router.push(`/reviews/${data.id}`);
       router.refresh();
     } catch (error) {
