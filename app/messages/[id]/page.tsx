@@ -547,9 +547,13 @@ export default function MessageThreadPage() {
               className="input-field min-h-[44px] max-h-40 resize-none py-3"
               placeholder="メッセージを入力"
             />
-            <button type="submit" className="btn-primary inline-flex items-center" disabled={sending || !content.trim()}>
-              <Send className="w-4 h-4 mr-1" />
-              送信
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 shadow-md hover:from-cyan-600 hover:via-sky-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={sending || !content.trim()}
+            >
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">{sending ? '送信中' : '送信'}</span>
             </button>
           </div>
         </form>

@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Settings, MessageCircle, Heart, Save, UploadCloud, Tag } from 'lucide-react';
+import { Settings, MessageCircle, Heart, Save, UploadCloud, Tag, ShieldAlert, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { maskNgWords } from '@/lib/ngWordFilter';
 import { useAuth } from '@/lib/AuthProvider';
@@ -111,6 +111,13 @@ export default function ProfilePage() {
   const [favoriteSelections, setFavoriteSelections] = useState<(number | '')[]>(['', '', '']);
   const [favoriteSearch, setFavoriteSearch] = useState('');
   const [saving, setSaving] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteStep, setDeleteStep] = useState<1 | 2>(1);
+  const [deleteConfirmed, setDeleteConfirmed] = useState(false);
+  const [deletePhrase, setDeletePhrase] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [reviewPage, setReviewPage] = useState(1);
   const [avatarPositionPicker, setAvatarPositionPicker] = useState<{ x: number; y: number }>({ x: 50, y: 50 });
@@ -548,6 +555,90 @@ export default function ProfilePage() {
     }
   };
 
+  const openDeleteModal = () => {
+    setShowDeleteModal(true);
+    setDeleteStep(1);
+    setDeleteConfirmed(false);
+    setDeletePhrase('');
+    setDeletePassword('');
+    setDeleteError('');
+  };
+
+  const closeDeleteModal = () => {
+    if (deleting) return;
+    setShowDeleteModal(false);
+  };
+
+  const goDeleteStep2 = () => {
+    if (!deleteConfirmed || deletePhrase.trim() !== '退会する') {
+      setDeleteError('確認チェックと確認キーワード「退会する」を入力してください。');
+      return;
+    }
+    setDeleteError('');
+    setDeleteStep(2);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    if (!user.email) {
+      setDeleteError('メールアドレスがないアカウントは、この画面では退会できません。');
+      return;
+    }
+    if (!deletePassword.trim()) {
+      setDeleteError('パスワードを入力してください。');
+      return;
+    }
+
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: deletePassword,
+      });
+      if (authError || !authData.user) {
+        throw new Error('パスワードが正しくありません。');
+      }
+      if (authData.user.id !== user.id) {
+        throw new Error('現在のログインユーザーと一致しません。');
+      }
+
+      const deletedSuffix = Date.now().toString().slice(-6);
+      const { error: deactivateError } = await supabase
+        .from('users')
+        .update({
+          username: `deleted-${user.id.slice(0, 8)}-${deletedSuffix}`,
+          display_name: '退会済みユーザー',
+          bio: '',
+          avatar_url: null,
+          is_suspended: true,
+        })
+        .eq('id', user.id);
+      if (deactivateError) throw deactivateError;
+
+      // Remove editable user-generated data that can be deleted by current RLS rules.
+      await Promise.all([
+        supabase.from('favorite_animes').delete().eq('user_id', user.id),
+        supabase.from('watchlists').delete().eq('user_id', user.id),
+        supabase.from('user_category_animes').delete().eq('user_id', user.id),
+        supabase.from('user_categories').delete().eq('user_id', user.id),
+        supabase.from('anime_ratings').delete().eq('user_id', user.id),
+        supabase.from('comments').delete().eq('user_id', user.id),
+        supabase.from('likes').delete().eq('user_id', user.id),
+        supabase.from('reviews').delete().eq('user_id', user.id),
+        supabase.from('follows').delete().eq('follower_id', user.id),
+      ]);
+
+      await supabase.auth.signOut();
+      router.replace('/auth/login');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '退会処理に失敗しました。';
+      setDeleteError(message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -770,6 +861,97 @@ export default function ProfilePage() {
             <Save className="w-4 h-4 mr-2" />
             保存する
           </button>
+
+          <div className="pt-2 border-t border-red-100">
+            <button
+              type="button"
+              onClick={openDeleteModal}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              アカウントを削除する
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="w-full max-w-md card p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-red-500" />
+              <h3 className="text-lg font-bold text-gray-900">アカウント削除</h3>
+            </div>
+
+            {deleteStep === 1 ? (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-700">
+                  退会すると、感想・DM・フォローなどのデータは削除され、元に戻せません。
+                </p>
+                <label className="flex items-start gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={deleteConfirmed}
+                    onChange={(e) => setDeleteConfirmed(e.target.checked)}
+                  />
+                  上記を理解して退会します
+                </label>
+                <div>
+                  <label className="text-xs font-semibold text-gray-700">確認キーワード</label>
+                  <input
+                    value={deletePhrase}
+                    onChange={(e) => setDeletePhrase(e.target.value)}
+                    className="input-field mt-1"
+                    placeholder="退会する"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm text-gray-700">本人確認のため、現在のパスワードを入力してください。</p>
+                <input
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="input-field"
+                  placeholder="パスワード"
+                  autoComplete="current-password"
+                />
+              </div>
+            )}
+
+            {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                className="btn-secondary !px-4 !py-2"
+                disabled={deleting}
+              >
+                キャンセル
+              </button>
+              {deleteStep === 1 ? (
+                <button
+                  type="button"
+                  onClick={goDeleteStep2}
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors"
+                >
+                  次へ
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleDeleteAccount}
+                  className="inline-flex items-center justify-center px-4 py-2 rounded-xl font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50"
+                  disabled={deleting}
+                >
+                  {deleting ? '削除中...' : '削除を確定'}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -789,7 +971,13 @@ export default function ProfilePage() {
                 className="input-field"
                 placeholder="例: 泣ける / 神作 / 作業用"
               />
-              <button type="button" onClick={handleCreateCategory} className="btn-secondary">
+              <button
+                type="button"
+                onClick={handleCreateCategory}
+                className="inline-flex items-center justify-center gap-1 px-5 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md hover:from-cyan-600 hover:to-blue-700 transition-all disabled:opacity-50"
+                disabled={!newCategoryName.trim()}
+              >
+                <Tag className="w-4 h-4" />
                 追加
               </button>
             </div>
