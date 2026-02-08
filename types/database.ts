@@ -49,6 +49,14 @@ export interface Like {
   created_at: string;
 }
 
+export interface ReviewReaction {
+  id: number;
+  review_id: number;
+  user_id: string;
+  reaction: 'heart' | 'fire' | 'wow' | 'cry' | 'agree';
+  created_at: string;
+}
+
 export interface Notification {
   id: number;
   user_id: string;

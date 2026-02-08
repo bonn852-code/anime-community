@@ -6,6 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
+import { REACTIONS, createReactionCountMap, type ReactionType } from '@/lib/reactions';
+import { fetchUserTitleMap } from '@/lib/userTitleMap';
+import type { UserTitle } from '@/lib/userTitle';
 
 interface ReviewWithDetails {
   id: number;
@@ -35,6 +38,8 @@ function ReviewsContent() {
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [reactionSummary, setReactionSummary] = useState<Record<number, Record<ReactionType, number>>>({});
+  const [titleMap, setTitleMap] = useState<Record<string, UserTitle>>({});
   const animeId = searchParams.get('animeId');
 
   useEffect(() => {
@@ -79,11 +84,44 @@ function ReviewsContent() {
         return { ...review, users: userValue, animes: animeValue };
       });
       setReviews(normalized);
+      await fetchReactionSummary(normalized.map((item) => item.id));
+      const titles = await fetchUserTitleMap(normalized.map((item) => item.user_id));
+      setTitleMap(titles);
     } catch (error) {
       console.error('感想取得エラー:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchReactionSummary = async (reviewIds: number[]) => {
+    if (reviewIds.length === 0) {
+      setReactionSummary({});
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('review_reactions')
+      .select('review_id, reaction')
+      .in('review_id', reviewIds);
+
+    if (error) {
+      console.error('リアクション集計取得エラー:', error);
+      return;
+    }
+
+    const next: Record<number, Record<ReactionType, number>> = {};
+    reviewIds.forEach((id) => {
+      next[id] = createReactionCountMap();
+    });
+
+    (data || []).forEach((row) => {
+      const reviewId = row.review_id as number;
+      const reaction = row.reaction as ReactionType;
+      if (!next[reviewId] || !(reaction in next[reviewId])) return;
+      next[reviewId][reaction] += 1;
+    });
+    setReactionSummary(next);
   };
 
   if (loading) {
@@ -149,6 +187,9 @@ function ReviewsContent() {
                           <p className="font-semibold text-gray-900 hover:text-sky-700 transition-colors">
                             {review.users?.display_name || review.users?.username}
                           </p>
+                          <span className={`inline-flex mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${titleMap[review.user_id]?.tone || 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                            {titleMap[review.user_id]?.label || '投稿ユーザー'}
+                          </span>
                           <p className="text-sm text-gray-500">
                             {new Date(review.created_at).toLocaleDateString('ja-JP')}
                           </p>
@@ -175,6 +216,22 @@ function ReviewsContent() {
                   <p className="text-gray-700 line-clamp-3">
                     {review.content}
                   </p>
+
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {REACTIONS.map((reaction) => {
+                      const count = reactionSummary[review.id]?.[reaction.type] || 0;
+                      if (count === 0) return null;
+                      return (
+                        <span
+                          key={reaction.type}
+                          className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold ${reaction.activeClass}`}
+                        >
+                          <span>{reaction.emoji}</span>
+                          <span>{count}</span>
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               </Link>
             ))}

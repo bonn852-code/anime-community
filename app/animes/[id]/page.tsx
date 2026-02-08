@@ -7,6 +7,9 @@ import { Hash, Star, MessageCircle, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
 import type { Anime } from '@/types/database';
+import { REACTIONS, createReactionCountMap, type ReactionType } from '@/lib/reactions';
+import { fetchUserTitleMap } from '@/lib/userTitleMap';
+import type { UserTitle } from '@/lib/userTitle';
 
 interface ReviewWithUser {
   id: number;
@@ -44,6 +47,8 @@ export default function AnimeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const lastTouchAtRef = useRef(0);
+  const [reactionSummary, setReactionSummary] = useState<Record<number, Record<ReactionType, number>>>({});
+  const [titleMap, setTitleMap] = useState<Record<string, UserTitle>>({});
 
   const hashtag = useMemo(() => (anime ? `#${anime.title}` : '#アニメ'), [anime]);
   const displayRating = userRating ? Math.round(userRating) : null;
@@ -102,11 +107,44 @@ export default function AnimeDetailPage() {
         return { ...review, users: userValue };
       });
       setReviews(normalized);
+      await fetchReactionSummary(normalized.map((item) => item.id));
+      const titles = await fetchUserTitleMap(normalized.map((item) => item.user_id));
+      setTitleMap(titles);
     } catch (error) {
       console.error('アニメ詳細取得エラー:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchReactionSummary = async (reviewIds: number[]) => {
+    if (reviewIds.length === 0) {
+      setReactionSummary({});
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('review_reactions')
+      .select('review_id, reaction')
+      .in('review_id', reviewIds);
+
+    if (error) {
+      console.error('リアクション集計取得エラー:', error);
+      return;
+    }
+
+    const next: Record<number, Record<ReactionType, number>> = {};
+    reviewIds.forEach((id) => {
+      next[id] = createReactionCountMap();
+    });
+
+    (data || []).forEach((row) => {
+      const reviewId = row.review_id as number;
+      const reaction = row.reaction as ReactionType;
+      if (!next[reviewId] || !(reaction in next[reviewId])) return;
+      next[reviewId][reaction] += 1;
+    });
+    setReactionSummary(next);
   };
 
   const fetchUserRating = async () => {
@@ -433,6 +471,9 @@ export default function AnimeDetailPage() {
                           <p className="text-sm text-gray-500 hover:text-sky-700 transition-colors">
                             {review.users?.display_name || review.users?.username}
                           </p>
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${titleMap[review.user_id]?.tone || 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                            {titleMap[review.user_id]?.label || '投稿ユーザー'}
+                          </span>
                         </button>
                       </div>
                       {review.has_spoiler && (
@@ -448,6 +489,21 @@ export default function AnimeDetailPage() {
                     <p className="text-xs text-gray-400 mt-3">
                       {new Date(review.created_at).toLocaleDateString('ja-JP')}
                     </p>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {REACTIONS.map((reaction) => {
+                        const count = reactionSummary[review.id]?.[reaction.type] || 0;
+                        if (count === 0) return null;
+                        return (
+                          <span
+                            key={reaction.type}
+                            className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold ${reaction.activeClass}`}
+                          >
+                            <span>{reaction.emoji}</span>
+                            <span>{count}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
                 </Link>
               ))}

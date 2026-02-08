@@ -113,6 +113,16 @@ CREATE TABLE IF NOT EXISTS public.likes (
   UNIQUE(user_id, review_id)
 );
 
+-- 感想リアクション
+CREATE TABLE IF NOT EXISTS public.review_reactions (
+  id BIGSERIAL PRIMARY KEY,
+  review_id BIGINT REFERENCES public.reviews(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE,
+  reaction TEXT NOT NULL CHECK (reaction IN ('heart', 'fire', 'wow', 'cry', 'agree')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(review_id, user_id, reaction)
+);
+
 -- フォロー
 CREATE TABLE IF NOT EXISTS public.follows (
   id BIGSERIAL PRIMARY KEY,
@@ -179,6 +189,9 @@ CREATE INDEX IF NOT EXISTS idx_comments_review_id ON public.comments(review_id);
 CREATE INDEX IF NOT EXISTS idx_comments_user_id ON public.comments(user_id);
 CREATE INDEX IF NOT EXISTS idx_likes_review_id ON public.likes(review_id);
 CREATE INDEX IF NOT EXISTS idx_likes_user_id ON public.likes(user_id);
+CREATE INDEX IF NOT EXISTS idx_review_reactions_review_id ON public.review_reactions(review_id);
+CREATE INDEX IF NOT EXISTS idx_review_reactions_user_id ON public.review_reactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_review_reactions_type ON public.review_reactions(reaction);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id_read ON public.notifications(user_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_direct_messages_sender ON public.direct_messages(sender_id);
@@ -210,6 +223,7 @@ ALTER TABLE public.anime_ratings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.likes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.review_reactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.direct_messages ENABLE ROW LEVEL SECURITY;
@@ -267,6 +281,11 @@ CREATE POLICY "comments_delete_policy" ON public.comments FOR DELETE USING (auth
 CREATE POLICY "likes_select_policy" ON public.likes FOR SELECT USING (true);
 CREATE POLICY "likes_insert_policy" ON public.likes FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "likes_delete_policy" ON public.likes FOR DELETE USING (auth.uid() = user_id);
+
+-- review_reactions テーブルのポリシー
+CREATE POLICY "review_reactions_select_policy" ON public.review_reactions FOR SELECT USING (true);
+CREATE POLICY "review_reactions_insert_policy" ON public.review_reactions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "review_reactions_delete_policy" ON public.review_reactions FOR DELETE USING (auth.uid() = user_id);
 
 -- follows テーブルのポリシー
 CREATE POLICY "follows_select_policy" ON public.follows FOR SELECT USING (true);

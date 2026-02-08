@@ -7,6 +7,9 @@ import { ArrowLeft, Heart, MessageCircle, Send, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { maskNgWords } from '@/lib/ngWordFilter';
 import { useAuth } from '@/lib/AuthProvider';
+import { REACTIONS, createReactionCountMap, type ReactionType } from '@/lib/reactions';
+import { fetchUserTitleMap } from '@/lib/userTitleMap';
+import type { UserTitle } from '@/lib/userTitle';
 
 interface ReviewDetail {
   id: number;
@@ -54,6 +57,9 @@ export default function ReviewDetailPage() {
   const [replyTo, setReplyTo] = useState<{ id: number; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [reactionCounts, setReactionCounts] = useState<Record<ReactionType, number>>(createReactionCountMap());
+  const [myReactions, setMyReactions] = useState<Set<ReactionType>>(new Set());
+  const [titleMap, setTitleMap] = useState<Record<string, UserTitle>>({});
 
   const isOwner = useMemo(() => user && review && user.id === review.user_id, [user, review]);
 
@@ -95,7 +101,8 @@ export default function ReviewDetailPage() {
       };
       setReview(normalizedReview);
 
-      await Promise.all([fetchComments(), fetchLikeCount()]);
+      await Promise.all([fetchComments(), fetchLikeCount(), fetchReactions()]);
+      await fetchTitles(reviewData.user_id);
     } catch (error) {
       console.error('感想取得エラー:', error);
     } finally {
@@ -121,6 +128,16 @@ export default function ReviewDetailPage() {
       return { ...comment, users: userValue };
     });
     setComments(normalized);
+    const commentUserIds = normalized.map((item) => item.user_id);
+    if (commentUserIds.length > 0) {
+      const commentTitles = await fetchUserTitleMap(commentUserIds);
+      setTitleMap((prev) => ({ ...prev, ...commentTitles }));
+    }
+  };
+
+  const fetchTitles = async (reviewOwnerId: string) => {
+    const titles = await fetchUserTitleMap([reviewOwnerId]);
+    setTitleMap((prev) => ({ ...prev, ...titles }));
   };
 
   const fetchLikeCount = async () => {
@@ -145,6 +162,34 @@ export default function ReviewDetailPage() {
     } catch (error) {
       console.error('いいね状態取得エラー:', error);
     }
+  };
+
+  const fetchReactions = async () => {
+    const { data, error } = await supabase
+      .from('review_reactions')
+      .select('reaction, user_id')
+      .eq('review_id', reviewId);
+
+    if (error) {
+      console.error('リアクション取得エラー:', error);
+      return;
+    }
+
+    const nextCounts = createReactionCountMap();
+    const mine = new Set<ReactionType>();
+
+    (data || []).forEach((item) => {
+      const reaction = item.reaction as ReactionType;
+      if (reaction in nextCounts) {
+        nextCounts[reaction] += 1;
+        if (user && item.user_id === user.id) {
+          mine.add(reaction);
+        }
+      }
+    });
+
+    setReactionCounts(nextCounts);
+    setMyReactions(mine);
   };
 
   const handleToggleLike = async () => {
@@ -215,6 +260,33 @@ export default function ReviewDetailPage() {
       }
     } catch (error) {
       console.error('コメント投稿エラー:', error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggleReaction = async (reaction: ReactionType) => {
+    if (!user || submitting) return;
+    setSubmitting(true);
+    try {
+      const hasReacted = myReactions.has(reaction);
+      if (hasReacted) {
+        const { error } = await supabase
+          .from('review_reactions')
+          .delete()
+          .eq('review_id', reviewId)
+          .eq('user_id', user.id)
+          .eq('reaction', reaction);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('review_reactions')
+          .insert({ review_id: reviewId, user_id: user.id, reaction });
+        if (error) throw error;
+      }
+      await fetchReactions();
+    } catch (error) {
+      console.error('リアクション更新エラー:', error);
     } finally {
       setSubmitting(false);
     }
@@ -316,6 +388,9 @@ export default function ReviewDetailPage() {
               <p className="font-semibold text-gray-900 hover:text-sky-700 transition-colors">
                 {review.users?.display_name || review.users?.username}
               </p>
+              <span className={`inline-flex mt-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${titleMap[review.user_id]?.tone || 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                {titleMap[review.user_id]?.label || '投稿ユーザー'}
+              </span>
               <p className="text-sm text-gray-500">
                 {new Date(review.created_at).toLocaleString('ja-JP')}
               </p>
@@ -359,6 +434,29 @@ export default function ReviewDetailPage() {
             コメント {comments.length}
           </span>
         </div>
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          {REACTIONS.map((item) => {
+            const active = myReactions.has(item.type);
+            return (
+              <button
+                key={item.type}
+                type="button"
+                onClick={() => handleToggleReaction(item.type)}
+                disabled={!user || submitting}
+                className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  active
+                    ? item.activeClass
+                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                } disabled:opacity-50`}
+              >
+                <span>{item.emoji}</span>
+                <span>{item.label}</span>
+                <span>{reactionCounts[item.type] || 0}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -386,6 +484,9 @@ export default function ReviewDetailPage() {
                       <p className="font-semibold text-gray-900 hover:text-sky-700 transition-colors">
                         {comment.users?.display_name || comment.users?.username}
                       </p>
+                      <span className={`inline-flex mt-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${titleMap[comment.user_id]?.tone || 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                        {titleMap[comment.user_id]?.label || 'コメントユーザー'}
+                      </span>
                       <p className="text-xs text-gray-500">
                         {new Date(comment.created_at).toLocaleString('ja-JP')}
                       </p>

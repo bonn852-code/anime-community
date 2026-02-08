@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Heart, MessageCircle, ArrowLeft, UserPlus, UserCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/AuthProvider';
+import { getUserTitle } from '@/lib/userTitle';
 
 interface UserProfile {
   id: string;
@@ -84,6 +85,7 @@ export default function UserProfilePage() {
   const [categories, setCategories] = useState<UserCategory[]>([]);
   const [categoryItems, setCategoryItems] = useState<UserCategoryAnime[]>([]);
   const [loading, setLoading] = useState(true);
+  const [likesReceived, setLikesReceived] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followActionLoading, setFollowActionLoading] = useState(false);
 
@@ -118,6 +120,7 @@ export default function UserProfilePage() {
         fetchWatchlist(),
         fetchCategories(),
         fetchCategoryItems(),
+        fetchLikesReceived(),
       ]);
     } finally {
       setLoading(false);
@@ -271,6 +274,24 @@ export default function UserProfilePage() {
     setIsFollowing(Boolean(data));
   };
 
+  const fetchLikesReceived = async () => {
+    const { count, error } = await supabase
+      .from('likes')
+      .select('id, reviews!inner(user_id)', { count: 'exact', head: true })
+      .eq('reviews.user_id', userId);
+
+    if (error) {
+      console.error('いいね獲得数取得エラー:', error);
+      return;
+    }
+    setLikesReceived(count || 0);
+  };
+
+  const profileTitle = useMemo(
+    () => getUserTitle(stats?.reviews_count ?? 0, likesReceived),
+    [stats?.reviews_count, likesReceived]
+  );
+
   const handleToggleFollow = async () => {
     if (!user || user.id === userId || followActionLoading) return;
     setFollowActionLoading(true);
@@ -378,6 +399,9 @@ export default function UserProfilePage() {
               {profile.display_name || profile.username}
             </h2>
             <p className="text-gray-600">@{handle}</p>
+            <span className={`inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold ${profileTitle.tone}`}>
+              {profileTitle.label}
+            </span>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link href={`/messages/${profile.id}`} className="btn-primary inline-flex items-center">
                 DMを送る

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Settings, MessageCircle, Heart, Save, UploadCloud, Tag, ShieldAlert, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { maskNgWords } from '@/lib/ngWordFilter';
+import { getUserTitle } from '@/lib/userTitle';
 import { useAuth } from '@/lib/AuthProvider';
 import type { User } from '@/types/database';
 
@@ -426,6 +427,11 @@ export default function ProfilePage() {
     return results;
   }, [stats?.reviews_count, likesReceived]);
 
+  const profileTitle = useMemo(
+    () => getUserTitle(stats?.reviews_count ?? 0, likesReceived),
+    [stats?.reviews_count, likesReceived]
+  );
+
   const watchlistGroups = useMemo(() => {
     const groups: Record<'plan' | 'watching' | 'completed' | 'paused', WatchlistItem[]> = {
       plan: [],
@@ -681,6 +687,9 @@ export default function ProfilePage() {
                   {profile.display_name || profile.username}
                 </h1>
                 <p className="text-gray-600">@{profile.display_name || profile.username}</p>
+                <span className={`inline-flex mt-2 px-3 py-1 rounded-full text-xs font-semibold ${profileTitle.tone}`}>
+                  {profileTitle.label}
+                </span>
               </div>
 
               <button
