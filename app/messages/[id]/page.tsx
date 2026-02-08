@@ -526,7 +526,7 @@ export default function MessageThreadPage() {
           {sendError && (
             <p className="text-xs text-red-500">{sendError}</p>
           )}
-          <div className="flex items-center gap-3">
+          <div className="flex items-end gap-2 sm:gap-3">
             <textarea
               ref={inputRef}
               rows={1}
@@ -549,8 +549,9 @@ export default function MessageThreadPage() {
             />
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-1.5 h-11 px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 shadow-md hover:from-cyan-600 hover:via-sky-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 h-11 w-11 sm:w-auto sm:px-4 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-500 via-sky-500 to-blue-600 shadow-md hover:from-cyan-600 hover:via-sky-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={sending || !content.trim()}
+              aria-label={sending ? '送信中' : '送信'}
             >
               <Send className="w-4 h-4" />
               <span className="hidden sm:inline">{sending ? '送信中' : '送信'}</span>
