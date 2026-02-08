@@ -556,7 +556,7 @@ export default function UserProfilePage() {
         </div>
 
         {categories.length > 0 ? (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 max-h-[520px] overflow-y-auto pr-1">
             {categories.map((category) => {
               const items = categoryGroups.get(category.id) || [];
               return (
@@ -612,7 +612,7 @@ export default function UserProfilePage() {
         </div>
 
         {favorites.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-h-[560px] overflow-y-auto pr-1">
             {favorites.map((favorite) => (
               <div key={favorite.anime_id} className="card overflow-hidden">
                 <div className="aspect-[3/4] bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100">

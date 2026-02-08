@@ -16,6 +16,7 @@ interface UserRow {
 }
 
 export default function UsersPage() {
+  const ITEMS_PER_PAGE = 20;
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -24,6 +25,8 @@ export default function UsersPage() {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredUsers = useMemo(() => users.filter((u) => u.id !== user?.id), [users, user]);
 
@@ -54,24 +57,29 @@ export default function UsersPage() {
       fetchUsers();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, user]);
+  }, [search, user, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   const fetchUsers = async () => {
     try {
       let query = supabase
         .from('users')
-        .select('id, username, display_name, avatar_url, avatar_position')
+        .select('id, username, display_name, avatar_url, avatar_position', { count: 'exact' })
         .order('created_at', { ascending: false })
-        .limit(30);
+        .range((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE - 1);
 
       if (search.trim()) {
         const q = search.trim();
         query = query.or(`username.ilike.%${q}%,display_name.ilike.%${q}%`);
       }
 
-      const { data, error } = await query;
+      const { data, error, count } = await query;
       if (error) throw error;
       setUsers(data || []);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error('ユーザー取得エラー:', error);
     } finally {
@@ -139,12 +147,13 @@ export default function UsersPage() {
       </div>
     );
   }
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">ユーザーを探す</h1>
-        <p className="text-gray-600">気になる人をフォローして感想を追いかけよう</p>
+        <p className="text-gray-600">気になる人をフォローして感想を追いかけよう（{totalCount}人）</p>
       </div>
 
       <div className="card p-6">
@@ -160,7 +169,8 @@ export default function UsersPage() {
       </div>
 
       {filteredUsers.length > 0 ? (
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
           {filteredUsers.map((profile) => {
             const isFollowing = followingIds.has(profile.id);
             const handle = formatHandle(profile);
@@ -212,6 +222,41 @@ export default function UsersPage() {
               </div>
             );
           })}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                前へ
+              </button>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-2 rounded-lg text-sm ${
+                    page === currentPage
+                      ? 'bg-sky-600 text-white'
+                      : 'border border-sky-200 text-sky-700 hover:bg-sky-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                次へ
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="card p-8 text-center text-gray-600">該当するユーザーが見つかりません</div>

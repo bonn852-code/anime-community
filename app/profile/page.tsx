@@ -1232,7 +1232,7 @@ export default function ProfilePage() {
         </div>
 
         {favorites.length > 0 ? (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-3 max-h-[560px] overflow-y-auto pr-1">
             {favorites.map((favorite) => (
               <Link key={favorite.anime_id} href={`/animes/${favorite.anime_id}`} className="card overflow-hidden block">
                 <div className="aspect-[3/4] bg-gradient-to-br from-sky-100 via-blue-100 to-indigo-100">

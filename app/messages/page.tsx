@@ -30,12 +30,14 @@ interface Conversation {
 }
 
 export default function MessagesPage() {
+  const ITEMS_PER_PAGE = 12;
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [users, setUsers] = useState<Record<string, UserRow>>({});
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -177,6 +179,21 @@ export default function MessagesPage() {
     });
     return Array.from(map.values()).sort((a, b) => b.lastMessage.created_at.localeCompare(a.lastMessage.created_at));
   }, [messages, users, user]);
+  const totalPages = Math.max(1, Math.ceil(conversations.length / ITEMS_PER_PAGE));
+  const visibleConversations = useMemo(
+    () => conversations.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE),
+    [conversations, currentPage]
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [conversations.length]);
 
   if (authLoading || loading) {
     return (
@@ -200,8 +217,9 @@ export default function MessagesPage() {
       )}
 
       {conversations.length > 0 ? (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {conversations.map((conv) => (
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            {visibleConversations.map((conv) => (
             <Link key={conv.user.id} href={`/messages/${conv.user.id}`}>
               <div className="card p-5 flex items-center justify-between gap-4 hover:shadow-lg transition-shadow">
                 <div className="flex items-center gap-3">
@@ -228,7 +246,42 @@ export default function MessagesPage() {
                 )}
               </div>
             </Link>
-          ))}
+            ))}
+          </div>
+          {totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                前へ
+              </button>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-2 rounded-lg text-sm ${
+                    page === currentPage
+                      ? 'bg-sky-600 text-white'
+                      : 'border border-sky-200 text-sky-700 hover:bg-sky-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                次へ
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="card p-8 text-center text-gray-600">まだメッセージがありません</div>

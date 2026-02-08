@@ -24,9 +24,12 @@ interface NotificationWithDetails {
 }
 
 export default function NotificationsPage() {
+  const ITEMS_PER_PAGE = 20;
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationWithDetails[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,11 +38,13 @@ export default function NotificationsPage() {
     } else if (user) {
       fetchNotifications();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, currentPage]);
 
   const fetchNotifications = async () => {
     try {
-      const { data, error } = await supabase
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      const { data, error, count } = await supabase
         .from('notifications')
         .select(`
           id,
@@ -49,12 +54,13 @@ export default function NotificationsPage() {
           created_at,
           actor:actor_id (username, display_name),
           reviews:review_id (id, title)
-        `)
+        `, { count: 'exact' })
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .range(from, to);
 
       if (error) throw error;
+      setTotalCount(count || 0);
       const normalized = (data || []).map((item) => {
         const actorValue = Array.isArray(item.actor) ? item.actor[0] ?? null : item.actor ?? null;
         const reviewValue = Array.isArray(item.reviews) ? item.reviews[0] ?? null : item.reviews ?? null;
@@ -117,6 +123,7 @@ export default function NotificationsPage() {
       </div>
     );
   }
+  const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
 
   return (
     <div className="space-y-8">
@@ -125,7 +132,7 @@ export default function NotificationsPage() {
           通知
         </h1>
         <p className="text-gray-600">
-          {notifications.length}件の通知
+          {totalCount}件の通知
         </p>
       </div>
 
@@ -173,6 +180,40 @@ export default function NotificationsPage() {
             </Link>
             );
           })}
+          {totalPages > 1 && (
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                前へ
+              </button>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-2 rounded-lg text-sm ${
+                    page === currentPage
+                      ? 'bg-sky-600 text-white'
+                      : 'border border-sky-200 text-sky-700 hover:bg-sky-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 rounded-lg border border-sky-200 text-sm text-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                次へ
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="card p-12 text-center">
