@@ -135,7 +135,7 @@ export default function Header() {
       <header className="sticky top-0 z-40 border-b border-sky-100 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/75">
         <div className="mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4 md:h-20 md:px-6">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/animecom-logo.png" alt="AniWorld" className="h-10 w-auto md:h-12" />
+            <img src="/animecom-logo.png" alt="AniWorld" className="h-12 w-auto md:h-16" />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1 rounded-full border border-sky-100 bg-sky-50/70 p-1">
