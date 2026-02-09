@@ -268,6 +268,40 @@ export default function AnimesPage() {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+  const visiblePageItems = (() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const pages = new Set<number>();
+    pages.add(1);
+    pages.add(totalPages);
+    for (let page = currentPage - 1; page <= currentPage + 1; page += 1) {
+      if (page > 1 && page < totalPages) {
+        pages.add(page);
+      }
+    }
+    if (currentPage <= 3) {
+      pages.add(2);
+      pages.add(3);
+      pages.add(4);
+    }
+    if (currentPage >= totalPages - 2) {
+      pages.add(totalPages - 1);
+      pages.add(totalPages - 2);
+      pages.add(totalPages - 3);
+    }
+
+    const sortedPages = Array.from(pages).sort((a, b) => a - b);
+    const items: Array<number | '...'> = [];
+    sortedPages.forEach((page, index) => {
+      if (index > 0 && page - sortedPages[index - 1] > 1) {
+        items.push('...');
+      }
+      items.push(page);
+    });
+    return items;
+  })();
 
   if (loading) {
     return (
@@ -461,20 +495,26 @@ export default function AnimesPage() {
               >
                 前へ
               </button>
-              {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
-                <button
-                  key={page}
-                  type="button"
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-2 rounded-lg text-sm ${
-                    page === currentPage
-                      ? 'bg-sky-600 text-white'
-                      : 'border border-sky-200 text-sky-700 hover:bg-sky-50'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+              {visiblePageItems.map((item, index) =>
+                item === '...' ? (
+                  <span key={`ellipsis-${index}`} className="px-1 text-sm text-gray-500">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setCurrentPage(item)}
+                    className={`px-3 py-2 rounded-lg text-sm ${
+                      item === currentPage
+                        ? 'bg-sky-600 text-white'
+                        : 'border border-sky-200 text-sky-700 hover:bg-sky-50'
+                    }`}
+                  >
+                    {item}
+                  </button>
+                )
+              )}
               <button
                 type="button"
                 onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
