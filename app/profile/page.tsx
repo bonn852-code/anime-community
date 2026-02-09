@@ -99,6 +99,7 @@ export default function ProfilePage() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categoryAnimeId, setCategoryAnimeId] = useState<number | ''>('');
   const [categoryTargetId, setCategoryTargetId] = useState<number | ''>('');
+  const [categoryAnimeSearch, setCategoryAnimeSearch] = useState('');
   const [likesReceived, setLikesReceived] = useState(0);
   const [animes, setAnimes] = useState<AnimeOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -454,6 +455,14 @@ export default function ProfilePage() {
 
   const totalReviewPages = Math.max(1, Math.ceil(reviews.length / REVIEWS_PER_PAGE));
   const visibleReviews = reviews.slice((reviewPage - 1) * REVIEWS_PER_PAGE, reviewPage * REVIEWS_PER_PAGE);
+  const filteredCategoryAnimeOptions = useMemo(() => {
+    const query = categoryAnimeSearch.trim().toLowerCase();
+    const filtered = query
+      ? animes.filter((anime) => anime.title.toLowerCase().includes(query))
+      : animes;
+    // Keep the dropdown manageable even if the catalog grows large.
+    return filtered.slice(0, 100);
+  }, [animes, categoryAnimeSearch]);
 
   const updateAvatarPositionFromClientPoint = (clientX: number, clientY: number) => {
     const target = avatarPickerRef.current;
@@ -1006,18 +1015,31 @@ export default function ProfilePage() {
                   </option>
                 ))}
               </select>
-              <select
-                value={categoryAnimeId}
-                onChange={(e) => setCategoryAnimeId(Number(e.target.value))}
-                className="input-field"
-              >
-                <option value="">アニメを選択</option>
-                {animes.map((anime) => (
-                  <option key={anime.id} value={anime.id}>
-                    {anime.title}
-                  </option>
-                ))}
-              </select>
+              <div className="space-y-2">
+                <input
+                  value={categoryAnimeSearch}
+                  onChange={(e) => setCategoryAnimeSearch(e.target.value)}
+                  className="input-field"
+                  placeholder="アニメ名で検索"
+                />
+                <select
+                  value={categoryAnimeId}
+                  onChange={(e) => setCategoryAnimeId(e.target.value ? Number(e.target.value) : '')}
+                  className="input-field"
+                >
+                  <option value="">アニメを選択</option>
+                  {filteredCategoryAnimeOptions.map((anime) => (
+                    <option key={anime.id} value={anime.id}>
+                      {anime.title}
+                    </option>
+                  ))}
+                </select>
+                {categoryAnimeSearch.trim() && (
+                  <p className="text-xs text-gray-500">
+                    {filteredCategoryAnimeOptions.length}件表示中（最大100件）
+                  </p>
+                )}
+              </div>
             </div>
             <button type="button" onClick={handleAddToCategory} className="btn-primary">
               追加する
